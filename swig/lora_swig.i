@@ -10,6 +10,8 @@
 %{
 #include "lora/demod.h"
 #include "lora/decode.h"
+#include "lora/mod.h"
+#include "lora/encode.h"
 %}
 
 
@@ -17,3 +19,7 @@
 GR_SWIG_BLOCK_MAGIC2(lora, demod);
 %include "lora/decode.h"
 GR_SWIG_BLOCK_MAGIC2(lora, decode);
+%include "lora/mod.h"
+GR_SWIG_BLOCK_MAGIC2(lora, mod);
+%include "lora/encode.h"
+GR_SWIG_BLOCK_MAGIC2(lora, encode);

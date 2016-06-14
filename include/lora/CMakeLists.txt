@@ -23,5 +23,7 @@
 install(FILES
     api.h
     demod.h
-    decode.h DESTINATION include/lora
+    decode.h
+    mod.h
+    encode.h DESTINATION include/lora
 )

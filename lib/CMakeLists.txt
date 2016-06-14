@@ -28,6 +28,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND lora_sources
     demod_impl.cc
     decode_impl.cc
+    mod_impl.cc
+    encode_impl.cc
 )
 
 set(lora_sources "${lora_sources}" PARENT_SCOPE)

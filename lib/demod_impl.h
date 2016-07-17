@@ -30,6 +30,7 @@ namespace gr {
     {
      private:
       // Nothing to declare in this block.
+      state_t m_state;
 
      public:
       demod_impl();

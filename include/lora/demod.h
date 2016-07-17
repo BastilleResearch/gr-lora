@@ -28,6 +28,14 @@
 namespace gr {
   namespace lora {
 
+    enum state_t {
+      S_IDLE,
+      S_DETECT_PREAMBLE,
+      S_DETECT_SYNC,
+      S_READ_PAYLOAD,
+      S_OUTPUT
+    };
+
     /*!
      * \brief <+description of block+>
      * \ingroup lora

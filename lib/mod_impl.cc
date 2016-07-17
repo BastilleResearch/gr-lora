@@ -40,8 +40,8 @@ namespace gr {
      */
     mod_impl::mod_impl()
       : gr::block("mod",
-              gr::io_signature::make(<+MIN_IN+>, <+MAX_IN+>, sizeof(<+ITYPE+>)),
-              gr::io_signature::make(<+MIN_OUT+>, <+MAX_OUT+>, sizeof(<+OTYPE+>)))
+              gr::io_signature::make(1, 1, sizeof(unsigned short)),
+              gr::io_signature::make(1, 1, sizeof(gr_complex)))
     {}
 
     /*
@@ -63,8 +63,8 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
-      const <+ITYPE+> *in = (const <+ITYPE+> *) input_items[0];
-      <+OTYPE+> *out = (<+OTYPE+> *) output_items[0];
+      const unsigned short *in = (const unsigned short *) input_items[0];
+      gr_complex *out = (gr_complex *) output_items[0];
 
       // Do <+signal processing+>
       // Tell runtime system how many input items we consumed on

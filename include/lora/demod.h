@@ -25,15 +25,19 @@
 #include <lora/api.h>
 #include <gnuradio/block.h>
 
+#define LORA_HISTORY_DEPTH      4
+#define PREAMBLE_HISTORY_DEPTH  4
+
 namespace gr {
   namespace lora {
 
     enum state_t {
-      S_IDLE,
+      S_RESET,
       S_DETECT_PREAMBLE,
       S_DETECT_SYNC,
+      S_TUNE_SYNC,
       S_READ_PAYLOAD,
-      S_OUTPUT
+      S_OUT
     };
 
     /*!
@@ -54,7 +58,9 @@ namespace gr {
        * class. lora::demod::make is the public interface for
        * creating new instances.
        */
-      static sptr make();
+      static sptr make( int bandwidth,
+                        short spreading_factor,
+                        short code_rate);
     };
 
   } // namespace lora

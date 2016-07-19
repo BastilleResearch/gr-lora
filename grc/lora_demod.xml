@@ -1,20 +1,46 @@
 <?xml version="1.0"?>
 <block>
-  <name>demod</name>
+  <name>LoRa Demod</name>
   <key>lora_demod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.demod()</make>
+  <make>lora.demod(125000, 8, 4)</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.
        Sub-nodes:
        * name
        * key (makes the value accessible as $keyname, e.g. in the make node)
        * type -->
+<!--   <param>
+    <name>Bandwidth</name>
+    <key>bandwidth</key>
+    <type>enum</type>
+    <option>
+      <name>125kHz</name>
+      <key>f125k</key>
+      <opt>125000</opt>
+    </option>
+    <option>
+      <name>250kHz</name>
+      <key>f125k</key>
+      <opt>250000</opt>
+    </option>
+    <option>
+      <name>500kHz</name>
+      <key>f125k</key>
+      <opt>500000</opt>
+    </option>
+  </param> -->
+  <!--
   <param>
-    <name>...</name>
-    <key>...</key>
-    <type>...</type>
-  </param>
+    <name>Code Rate</name>
+    <key>code_rate</key>
+    <type>enum</type>
+    <option>
+      <name>Code Rate</name>
+      <key>code_rate</key>
+      <opt>
+    </option>
+  </param> -->
 
   <!-- Make one 'sink' node per input. Sub-nodes:
        * name (an identifier for the GUI)
@@ -23,7 +49,7 @@
        * optional (set to 1 for optional inputs) -->
   <sink>
     <name>in</name>
-    <type><!-- e.g. int, float, complex, byte, short, xxx_vector, ...--></type>
+    <type>complex</type>
   </sink>
 
   <!-- Make one 'source' node per output. Sub-nodes:
@@ -33,6 +59,6 @@
        * optional (set to 1 for optional inputs) -->
   <source>
     <name>out</name>
-    <type><!-- e.g. int, float, complex, byte, short, xxx_vector, ...--></type>
+    <type>short</type>
   </source>
 </block>

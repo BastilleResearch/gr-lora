@@ -21,7 +21,12 @@
 #ifndef INCLUDED_LORA_DEMOD_IMPL_H
 #define INCLUDED_LORA_DEMOD_IMPL_H
 
-#include <lora/demod.h>
+#include <cmath>
+#include <cstdlib>
+#include <vector>
+#include <complex>
+#include <gnuradio/fft/fft.h>
+#include "lora/demod.h"
 
 namespace gr {
   namespace lora {
@@ -30,11 +35,26 @@ namespace gr {
     {
      private:
       // Nothing to declare in this block.
-      state_t m_state;
+      state_t       m_state;
+      int           m_bw;
+      short         m_sf;
+      short         m_cr;
+
+      int           m_fft_size;
+      int           m_preamble_history[PREAMBLE_HISTORY_DEPTH];
+
+      fft::fft_complex *m_fft;
+
+      std::vector<gr_complex> upchirp;
+      std::vector<gr_complex> downchirp;
 
      public:
-      demod_impl();
+      demod_impl( int bandwidth,
+                  short spreading_factor,
+                  short code_rate);
       ~demod_impl();
+
+      short argmax(gr_complex *fft_result);
 
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);

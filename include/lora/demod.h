@@ -23,10 +23,11 @@
 #define INCLUDED_LORA_DEMOD_H
 
 #include <lora/api.h>
+//#include <volk/volk.h>
 #include <gnuradio/block.h>
 
-#define LORA_HISTORY_DEPTH      4
-#define PREAMBLE_HISTORY_DEPTH  4
+#define LORA_HISTORY_DEPTH       4
+#define REQUIRED_PREAMBLE_DEPTH  4
 
 namespace gr {
   namespace lora {

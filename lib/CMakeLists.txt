@@ -22,8 +22,11 @@
 ########################################################################
 include(GrPlatform) #define LIB_SUFFIX
 
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIRS})
+include_directories(${Boost_INCLUDE_DIR}
+                    ${VOLK_INCLUDE_DIRS}
+)
+link_directories(${Boost_LIBRARY_DIRS}
+)
 
 list(APPEND lora_sources
     demod_impl.cc
@@ -38,8 +41,14 @@ if(NOT lora_sources)
 	return()
 endif(NOT lora_sources)
 
+list(APPEND lora_libs
+    ${Boost_LIBRARIES}
+    ${GNURADIO_ALL_LIBRARIES}
+    ${VOLK_LIBRARIES}
+)
+
 add_library(gnuradio-lora SHARED ${lora_sources})
-target_link_libraries(gnuradio-lora ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
+target_link_libraries(gnuradio-lora ${lora_libs})
 set_target_properties(gnuradio-lora PROPERTIES DEFINE_SYMBOL "gnuradio_lora_EXPORTS")
 
 if(APPLE)
@@ -73,8 +82,7 @@ add_executable(test-lora ${test_lora_sources})
 
 target_link_libraries(
   test-lora
-  ${GNURADIO_RUNTIME_LIBRARIES}
-  ${Boost_LIBRARIES}
+  ${lora_libs}
   ${CPPUNIT_LIBRARIES}
   gnuradio-lora
 )

@@ -25,7 +25,9 @@
 #include <cstdlib>
 #include <vector>
 #include <complex>
+#include <fstream>
 #include <gnuradio/fft/fft.h>
+#include <volk/volk.h>
 #include "lora/demod.h"
 
 namespace gr {
@@ -44,9 +46,17 @@ namespace gr {
       int           m_preamble_history[PREAMBLE_HISTORY_DEPTH];
 
       fft::fft_complex *m_fft;
+      std::vector<float> m_window;
 
-      std::vector<gr_complex> upchirp;
-      std::vector<gr_complex> downchirp;
+      std::vector<gr_complex> m_dup;
+      std::vector<gr_complex> m_ddown;
+
+      std::vector<gr_complex> m_upchirp;
+      std::vector<gr_complex> m_downchirp;
+
+      std::vector<gr_complex> m_dechirped;
+
+      std::ofstream f_chirp;
 
      public:
       demod_impl( int bandwidth,
@@ -55,6 +65,7 @@ namespace gr {
       ~demod_impl();
 
       short argmax(gr_complex *fft_result);
+      void dechirp(const gr_complex *in, std::vector<gr_complex>& chirp, std::vector<gr_complex>& dechirped);
 
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);

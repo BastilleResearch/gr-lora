@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+#include <queue>
 #include <complex>
 #include <fstream>
 #include <gnuradio/fft/fft.h>
@@ -43,7 +44,7 @@ namespace gr {
       short         m_cr;
 
       int           m_fft_size;
-      int           m_preamble_history[PREAMBLE_HISTORY_DEPTH];
+      std::vector<short> m_argmax_history;
 
       fft::fft_complex *m_fft;
       std::vector<float> m_window;
@@ -56,7 +57,7 @@ namespace gr {
 
       std::vector<gr_complex> m_dechirped;
 
-      std::ofstream f_chirp;
+      std::ofstream f_up, f_down;
 
      public:
       demod_impl( int bandwidth,

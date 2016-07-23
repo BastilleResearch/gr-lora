@@ -23,7 +23,6 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-//#include <volk/volk.h>
 #include "demod_impl.h"
 
 namespace gr {
@@ -49,7 +48,8 @@ namespace gr {
               // gr::io_signature::make(<+MIN_OUT+>, <+MAX_OUT+>, sizeof(unsigned short)))
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 1, sizeof(short))),
-      f_chirp("chirp.out", std::ios::out)
+      f_up("chirp.out", std::ios::out),
+      f_down("down.out", std::ios::out)
     {
       m_state = S_RESET;
       m_bw    = bandwidth;
@@ -63,7 +63,7 @@ namespace gr {
         m_window.push_back(1.0);
       }
 
-      memset(m_preamble_history, 0, PREAMBLE_HISTORY_DEPTH*sizeof(int));
+      // memset(m_argmax_history, 0, REQUIRED_PREAMBLE_DEPTH*sizeof(short));
 
       float phase = -M_PI;
       // float phase = 0;
@@ -74,9 +74,10 @@ namespace gr {
         m_upchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
         m_downchirp.push_back(gr_complex(std::polar(1.0, accumulator)));
         phase += (2*M_PI)/m_fft_size;
-
-        // f_chirp.write((const char*)&m_upchirp[i], sizeof(gr_complex));
       }
+
+      // f_up.write((const char*)&m_upchirp[0], m_fft_size*sizeof(gr_complex));
+      // f_up.write((const char*)&m_downchirp[0], m_fft_size*sizeof(gr_complex));
 
       set_history(LORA_HISTORY_DEPTH*pow(2, m_sf));  // Sync is 2.25 chirp periods long
     }
@@ -148,57 +149,80 @@ namespace gr {
       const gr_complex *in = (const gr_complex *) input_items[0];
       short *out = (short *) output_items[0];
 
-      std::cout << "ninput_items" << ninput_items[0] << std::endl;
-      std::cout << "noutput_items" << noutput_items << std::endl;
+      short max_index = 0;
+      short preamble_idx = 0;
+      bool preamble_found = false;
+      gr_complex *processing = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
+
+      if (processing == NULL)
+      {
+        std::cerr << "Unable to allocate processing buffer!" << std::endl;
+      }
 
       // Do <+signal processing+>
       // Tell runtime system how many input items we consumed on
       // each input stream.
 
-      // De-chirp the incoming signal
-      // for (int i = 0; i < ninput_items[0]; i++)
-      // {
-      //   volk_32fc_32f_multiply_32fc(&upchirp[i], &in[i], &m_dup[i], sizeof(gr_complex));
-      //   volk_32fc_32f_multiply_32fc(&downchirp[i], &in[i], &m_ddown[i], sizeof(gr_complex));
-      // }
-      // memcpy(m_fft->get_inbuf(), &m_dup[0], m_fft_size*sizeof(gr_complex));
-      // m_fft->execute();
-
-      gr_complex *data = (gr_complex *)malloc(ninput_items[0]*sizeof(gr_complex));
-
-      for (int i = 0; i < ninput_items[0]; i++)
+      // Dechirp the incoming signal
+      for (int i = 0; i < m_fft_size; i++)
       {
-        volk_32fc_32f_multiply_32fc(&data[i], &in[i], (float *)&m_downchirp[i%m_fft_size], 1);
+        volk_32fc_32f_multiply_32fc(&processing[i], &in[i], (float *)&m_downchirp[i], 1);
       }
 
-      std::cout << "0" << std::endl;
-      // f_chirp.write((const char*)m_fft->get_outbuf(), m_fft_size*sizeof(gr_complex));
-      f_chirp.write((const char*)&data[0], ninput_items[0]*sizeof(gr_complex));
+      // FFT
+      memcpy(m_fft->get_inbuf(), &processing[0], m_fft_size*sizeof(gr_complex));
+      m_fft->execute();
 
-      free(data);
-
-      // if (ninput_items[0] >= m_fft_size)
-      // {
-      //   dechirp(in, m_upchirp, m_dup);
-      //   std::cout << "6" << std::endl;
-      //   dechirp(in, m_downchirp, m_ddown);
-      // // }
+      // Take argmax of returned FFT (similar to MFSK demod)
+      max_index = argmax(m_fft->get_outbuf());
+      m_argmax_history.insert(m_argmax_history.begin(), max_index);
+      if (m_argmax_history.size() > REQUIRED_PREAMBLE_DEPTH)
+      {
+        m_argmax_history.pop_back();
+        f_up.write((const char*)&m_argmax_history[0], sizeof(short));
+      }
 
       switch (m_state) {
       case S_RESET:
-        memset(m_preamble_history, 0, PREAMBLE_HISTORY_DEPTH*sizeof(int));
+        if (m_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
+        {
+          m_state = S_DETECT_PREAMBLE;
+          std::cout << "New state: S_DETECT_PREAMBLE" << std::endl;
+        }
         break;
-      case S_DETECT_PREAMBLE:
 
+      case S_DETECT_PREAMBLE:
+        preamble_found = true;
+        preamble_idx = m_argmax_history[0];
+
+        for (int i = 1; i < REQUIRED_PREAMBLE_DEPTH; i++)
+        {
+          if (preamble_idx != m_argmax_history[i])
+          {
+            preamble_found = false;
+          }
+        }
+
+        if (preamble_found)   // TODO and squelch open
+        {
+          m_state = S_DETECT_SYNC;
+          std::cout << "New state: S_DETECT_SYNC" << std::endl;
+        }
         break;
+
       case S_DETECT_SYNC:
+        f_down.write((const char*)&m_argmax_history[0], sizeof(short));
         break;
+
       case S_TUNE_SYNC:
         break;
+
       case S_READ_PAYLOAD:
         break;
+
       case S_OUT:
         break;
+
       default:
         break;
       }
@@ -206,12 +230,11 @@ namespace gr {
       // for(int i=0; i < m_fft_size; i++)
       //   std::cout << upchirp[i] << std::endl;
 
-      // f_chirp.write((const char*)&m_dup[0], m_fft_size*sizeof(gr_complex));
-      std::cout << "I am here." << std::endl;
+      // f_up.write((const char*)&m_dup[0], m_fft_size*sizeof(gr_complex));
 
       // while(1){;}
 
-      consume_each (noutput_items);
+      consume_each (m_fft_size);
 
       // Tell runtime system how many output items we produced.
       return noutput_items;

@@ -25,7 +25,14 @@
 #include <gnuradio/io_signature.h>
 #include "demod_impl.h"
 
-// #define DEBUG 1
+#define DEBUG_OFF     0
+#define DEBUG_INFO    1
+#define DEBUG_VERBOSE 2
+#define DEBUG_ULTRA   3
+#define DEBUG         DEBUG_VERBOSE
+
+#define OVERLAP_DEFAULT 1
+#define OVERLAP_FACTOR  8
 
 namespace gr {
   namespace lora {
@@ -58,6 +65,7 @@ namespace gr {
 
       m_fft_size = (1 << spreading_factor);
       m_fft = new fft::fft_complex(m_fft_size, true, 1);
+      m_overlaps = OVERLAP_DEFAULT;
 
       m_power     = .000000001;     // MAGIC
       m_threshold = 0.0005;         // MAGIC
@@ -98,10 +106,11 @@ namespace gr {
      */
     demod_impl::~demod_impl()
     {
+      delete m_fft;
     }
 
     short
-    demod_impl::argmax(gr_complex *fft_result)
+    demod_impl::argmax(gr_complex *fft_result, bool update_squelch)
     {
       float magsq   = pow(real(fft_result[0]), 2) + pow(imag(fft_result[0]), 2);
       float max_val = magsq;
@@ -117,10 +126,12 @@ namespace gr {
         }
       }
 
-      m_power = max_val;
-      m_squelched = (m_power > m_threshold) ? false : true;
+      if (update_squelch) {
+        m_power = max_val;
+        m_squelched = (m_power > m_threshold) ? false : true;
+      }
 
-#ifdef DEBUG
+#if DEBUG >= DEBUG_ULTRA
       std::cout << "POWER " << m_power << " " << m_squelched << std::endl;
 #endif
 
@@ -145,6 +156,7 @@ namespace gr {
 
       short max_index = 0;
       bool preamble_found = false;
+      bool sfd_found      = false;
       gr_complex *up_block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
       gr_complex *down_block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
 
@@ -157,6 +169,8 @@ namespace gr {
       // Tell runtime system how many input items we consumed on
       // each input stream.
 
+      noutput_items = 0;
+
       // Dechirp the incoming signal
       volk_32fc_x2_multiply_32fc(up_block, in, &m_downchirp[0], m_fft_size);
       volk_32fc_x2_multiply_32fc(down_block, in, &m_upchirp[0], m_fft_size);
@@ -164,12 +178,11 @@ namespace gr {
       f_up.write((const char*)&up_block[0], m_fft_size*sizeof(gr_complex));
       f_down.write((const char*)&down_block[0], m_fft_size*sizeof(gr_complex));
 
-      // FFT
+      // Preamble and Data FFT
       memcpy(m_fft->get_inbuf(), &down_block[0], m_fft_size*sizeof(gr_complex));
       m_fft->execute();
-
       // Take argmax of returned FFT (similar to MFSK demod)
-      max_index = argmax(m_fft->get_outbuf());
+      max_index = argmax(m_fft->get_outbuf(), true);
       m_argmax_history.insert(m_argmax_history.begin(), max_index);
 
       if (m_argmax_history.size() > REQUIRED_PREAMBLE_DEPTH)
@@ -177,27 +190,44 @@ namespace gr {
         m_argmax_history.pop_back();
       }
 
+      // SFD Downchirp FFT
+      memcpy(m_fft->get_inbuf(), &up_block[0], m_fft_size*sizeof(gr_complex));
+      m_fft->execute();
+      // Take argmax of returned FFT (similar to MFSK demod)
+      max_index = argmax(m_fft->get_outbuf(), false);
+      m_sfd_history.insert(m_sfd_history.begin(), max_index);
+
+      if (m_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
+      {
+        m_sfd_history.pop_back();
+      }
+
       switch (m_state) {
       case S_RESET:
+        m_overlaps = OVERLAP_DEFAULT;
+        m_symbols.clear();
+
         if (m_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
         {
           m_state = S_DETECT_PREAMBLE;
-#ifdef DEBUG
+#if DEBUG >= DEBUG_INFO
           std::cout << "New state: S_DETECT_PREAMBLE" << std::endl;
 #endif
         }
         break;
 
+
+
       case S_DETECT_PREAMBLE:
-        preamble_found = true;
         m_preamble_idx = m_argmax_history[0];
 
-#ifdef DEBUG
-        std::cout << m_argmax_history[0] << std::endl;
+#if DEBUG >= DEBUG_VERBOSE
+        std::cout << "PREAMBLE " << m_argmax_history[0] << std::endl;
 #endif
 
         for (int i = 1; i < REQUIRED_PREAMBLE_DEPTH; i++)
         {
+          preamble_found = true;
           if (m_preamble_idx != m_argmax_history[i])
           {
             preamble_found = false;
@@ -206,36 +236,87 @@ namespace gr {
 
         if (preamble_found and !m_squelched)   // TODO and squelch open
         {
-          m_state = S_READ_PAYLOAD;   // XXX mknight
-#ifdef DEBUG
+          m_state = S_READ_PAYLOAD;   // TODO correct state
+#if DEBUG >= DEBUG_INFO
           std::cout << "New state: S_DETECT_SYNC" << std::endl;
 #endif
         }
         break;
 
+
+
       case S_DETECT_SYNC:
-        // std::cout << m_argmax_history[0] << std::endl;
+//         m_overlaps = 8;     // MAGIC
+//         m_sfd_idx = m_sfd_history[0];
+
+// #if DEBUG >= DEBUG_VERBOSE
+//         std::cout <<"SFD " << m_sfd_history[0] << " SFD SIZE " << m_sfd_history.size() << std::endl;
+// #endif
+
+//         if (m_sfd_history.size() >= REQUIRED_SFD_CHIRPS*m_overlaps)
+//         {
+//           sfd_found = true;
+//           for (int i = 1; i < REQUIRED_SFD_CHIRPS*m_overlaps; i++)
+//           {
+//             if (m_sfd_idx != m_sfd_history[i])
+//             {
+//               sfd_found = false;
+//             }
+//           }
+
+//           if (sfd_found)
+//           {
+//             m_state = S_READ_PAYLOAD;
+//   #if DEBUG >= DEBUG_INFO
+//             std::cout << "New state: S_READ_PAYLOAD" << std::endl;
+//   #endif
+//           }
+//         }
+
         break;
+
+
 
       case S_TUNE_SYNC:
         break;
 
+
+
       case S_READ_PAYLOAD:
         if (m_squelched)
         {
-          m_state = S_RESET;
+          m_state = S_OUT;
         }
-        std::cout << ((unsigned short)(m_argmax_history[0] - m_preamble_idx) % m_fft_size) << std::endl;
+        else
+        {
+#if DEBUG >= DEBUG_VERBOSE
+          std::cout << "SYMBOL " << ((unsigned short)(m_argmax_history[0] - m_preamble_idx) % m_fft_size) << std::endl;
+#endif
+          m_symbols.push_back((m_argmax_history[0]-m_preamble_idx) % m_fft_size);
+        }
+
         break;
 
+
+
       case S_OUT:
+        std::cout << "Received frame:" << std::endl;
+        for (int i = 8; i < m_symbols.size(); i++)
+        {
+          std::cout << "SYMBOL " << m_symbols[i] << std::endl;
+        }
+        noutput_items = m_symbols.size();
+        m_state = S_RESET;
+
         break;
+
+
 
       default:
         break;
       }
 
-      consume_each (m_fft_size);
+      consume_each (m_fft_size/m_overlaps);
 
       free(up_block);
       free(down_block);

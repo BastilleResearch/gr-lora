@@ -158,13 +158,8 @@ namespace gr {
       // each input stream.
 
       // Dechirp the incoming signal
-      for (int i = 0; i < m_fft_size; i++)
-      {
-        // volk_32fc_32f_multiply_32fc(&up_block[i], &in[i], (float *)&m_downchirp[i], 1);
-        // volk_32fc_32f_multiply_32fc(&down_block[i], &in[i], (float *)&m_upchirp[i], 1);
-        up_block[i] = in[i] * m_downchirp[i];
-        down_block[i] = in[i] * m_upchirp[i];
-      }
+      volk_32fc_x2_multiply_32fc(up_block, in, &m_downchirp[0], m_fft_size);
+      volk_32fc_x2_multiply_32fc(down_block, in, &m_upchirp[0], m_fft_size);
 
       f_up.write((const char*)&up_block[0], m_fft_size*sizeof(gr_complex));
       f_down.write((const char*)&down_block[0], m_fft_size*sizeof(gr_complex));

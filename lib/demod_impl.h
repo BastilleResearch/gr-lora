@@ -44,9 +44,15 @@ namespace gr {
       short         m_cr;
 
       int           m_fft_size;
+
+      float         m_power;
+      float         m_threshold;
+      bool          m_squelched;
+
+      unsigned short     m_preamble_idx;
       std::vector<short> m_argmax_history;
 
-      fft::fft_complex *m_fft;
+      fft::fft_complex   *m_fft;
       std::vector<float> m_window;
 
       std::vector<gr_complex> m_dup;
@@ -66,7 +72,6 @@ namespace gr {
       ~demod_impl();
 
       short argmax(gr_complex *fft_result);
-      void dechirp(const gr_complex *in, std::vector<gr_complex>& chirp, std::vector<gr_complex>& dechirped);
 
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);

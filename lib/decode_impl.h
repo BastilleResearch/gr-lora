@@ -21,6 +21,7 @@
 #ifndef INCLUDED_LORA_DECODE_IMPL_H
 #define INCLUDED_LORA_DECODE_IMPL_H
 
+#include <iostream>
 #include <lora/decode.h>
 
 namespace gr {
@@ -35,10 +36,13 @@ namespace gr {
       unsigned char m_sf;
       unsigned char m_cr;
 
+      unsigned short m_fft_size;
+
       // m_codewords
 
      public:
-      decode_impl();
+      decode_impl(  short spreading_factor,
+                    short code_rate);
       ~decode_impl();
 
       void from_gray(std::vector<unsigned short> &symbols);

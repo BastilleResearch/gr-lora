@@ -37,22 +37,22 @@ namespace gr {
     class demod_impl : public demod
     {
      private:
-      state_t       m_state;
-      int           m_bw;
-      short         m_sf;
-      short         m_cr;
+      state_t         m_state;
+      int             m_bw;
+      unsigned short  m_sf;
+      unsigned short  m_cr;
 
-      int           m_fft_size;
-      int           m_overlaps;
+      unsigned short  m_fft_size;
+      unsigned short  m_overlaps;
 
-      float         m_power;
-      float         m_threshold;
-      bool          m_squelched;
+      float           m_power;
+      float           m_threshold;
+      bool            m_squelched;
 
-      unsigned short      m_preamble_idx;
-      unsigned short      m_sfd_idx;
-      std::vector<short>  m_argmax_history;
-      std::vector<short>  m_sfd_history;
+      unsigned short  m_preamble_idx;
+      unsigned short  m_sfd_idx;
+      std::vector<unsigned short>  m_argmax_history;
+      std::vector<unsigned short>  m_sfd_history;
 
       fft::fft_complex   *m_fft;
       std::vector<float> m_window;
@@ -65,17 +65,17 @@ namespace gr {
 
       std::vector<gr_complex> m_dechirped;
 
-      std::vector<unsigned short>      m_symbols;
+      std::vector<unsigned short> m_symbols;
 
       std::ofstream f_up, f_down;
 
      public:
       demod_impl( int bandwidth,
-                  short spreading_factor,
-                  short code_rate);
+                  unsigned short spreading_factor,
+                  unsigned short code_rate);
       ~demod_impl();
 
-      short argmax(gr_complex *fft_result, bool update_squelch);
+      unsigned short argmax(gr_complex *fft_result, bool update_squelch);
 
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);

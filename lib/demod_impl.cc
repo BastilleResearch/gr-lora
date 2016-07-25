@@ -39,8 +39,8 @@ namespace gr {
 
     demod::sptr
     demod::make(  int bandwidth,
-                  short spreading_factor,
-                  short code_rate)
+                  unsigned short spreading_factor,
+                  unsigned short code_rate)
     {
       return gnuradio::get_initial_sptr
         (new demod_impl(125000, 8, 4));
@@ -50,11 +50,11 @@ namespace gr {
      * The private constructor
      */
     demod_impl::demod_impl( int bandwidth,
-                            short spreading_factor,
-                            short code_rate)
+                            unsigned short spreading_factor,
+                            unsigned short code_rate)
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(0, 1, sizeof(short))),
+              gr::io_signature::make(0, 1, sizeof(unsigned short))),
       f_up("up.out", std::ios::out),
       f_down("down.out", std::ios::out)
     {
@@ -109,15 +109,15 @@ namespace gr {
       delete m_fft;
     }
 
-    short
+    unsigned short
     demod_impl::argmax(gr_complex *fft_result, bool update_squelch)
     {
       float magsq   = pow(real(fft_result[0]), 2) + pow(imag(fft_result[0]), 2);
       float max_val = magsq;
-      int   max_idx = 0;
+      unsigned short   max_idx = 0;
 
 
-      for (int i = 0; i < m_fft_size; i++) {
+      for (unsigned short i = 0; i < m_fft_size; i++) {
         magsq = pow(real(fft_result[i]), 2) + pow(imag(fft_result[i]), 2);
         if (magsq > max_val)
         {
@@ -152,9 +152,9 @@ namespace gr {
                        gr_vector_void_star &output_items)
     {
       const gr_complex *in = (const gr_complex *) input_items[0];
-      short *out = (short *) output_items[0];
+      unsigned short *out = (unsigned short *) output_items[0];
 
-      short max_index = 0;
+      unsigned short max_index = 0;
       bool preamble_found = false;
       bool sfd_found      = false;
       gr_complex *up_block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
@@ -290,9 +290,12 @@ namespace gr {
         else
         {
 #if DEBUG >= DEBUG_VERBOSE
-          std::cout << "SYMBOL " << ((unsigned short)(m_argmax_history[0] - m_preamble_idx) % m_fft_size) << std::endl;
+          std::cout << "LORA DEMOD SYMBOL   " << (unsigned short)((m_argmax_history[0] - m_preamble_idx+m_fft_size) % m_fft_size) << std::endl;
 #endif
-          m_symbols.push_back((m_argmax_history[0]-m_preamble_idx) % m_fft_size);
+          m_symbols.push_back((m_argmax_history[0]-m_preamble_idx+m_fft_size) % m_fft_size);
+
+          *out = (unsigned short)((m_argmax_history[0]-m_preamble_idx+m_fft_size) % m_fft_size);
+          noutput_items = 1;
         }
 
         break;
@@ -300,12 +303,13 @@ namespace gr {
 
 
       case S_OUT:
-        std::cout << "Received frame:" << std::endl;
-        for (int i = 8; i < m_symbols.size(); i++)
-        {
-          std::cout << "SYMBOL " << m_symbols[i] << std::endl;
-        }
-        noutput_items = m_symbols.size();
+        // std::cout << "Received frame:" << std::endl;
+        // for (int i = 8; i < m_symbols.size(); i++)
+        // {
+        //   std::cout << "OUT SYMBOL " << m_symbols[i] << std::endl;
+        // }
+
+        // noutput_items = m_symbols.size();
         m_state = S_RESET;
 
         break;

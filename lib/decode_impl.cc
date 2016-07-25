@@ -34,22 +34,26 @@ namespace gr {
   namespace lora {
 
     decode::sptr
-    decode::make()
+    decode::make(   short spreading_factor,
+                    short code_rate)
     {
       return gnuradio::get_initial_sptr
-        (new decode_impl());
+        (new decode_impl(8, 4));
     }
 
     /*
      * The private constructor
      */
-    decode_impl::decode_impl()
+    decode_impl::decode_impl( short spreading_factor,
+                              short code_rate)
       : gr::block("decode",
-              gr::io_signature::make(1, 1, sizeof(unsigned short)),
-              gr::io_signature::make(1, 1, sizeof(unsigned char)))
+              gr::io_signature::make(1, 1, sizeof(short)),
+              gr::io_signature::make(0, 1, sizeof(unsigned char)))
     {
       m_sf = 8;
       m_cr = 4; 
+
+      m_fft_size = (1 << spreading_factor);
 
       m_whitening_sequence = (unsigned char *)malloc(100*sizeof(unsigned char));
     }
@@ -138,7 +142,8 @@ namespace gr {
     void
     decode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
-      /* <+forecast+> e.g. ninput_items_required[0] = noutput_items */
+       // <+forecast+> e.g. ninput_items_required[0] = noutput_items
+       ninput_items_required[0] = noutput_items; 
     }
 
     int
@@ -148,7 +153,10 @@ namespace gr {
                        gr_vector_void_star &output_items)
     {
       const unsigned short *in = (const unsigned short *) input_items[0];
-      unsigned char *out = (unsigned char *) output_items[0];
+      // unsigned char *out = (unsigned char *) output_items[0];
+      unsigned short symbol = (unsigned short)*in;
+
+      std::cout << "LORA DECODER SYMBOL " << symbol << std::endl;
 
       // Do <+signal processing+>
       // Tell runtime system how many input items we consumed on

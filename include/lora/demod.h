@@ -61,8 +61,8 @@ namespace gr {
        * creating new instances.
        */
       static sptr make( int bandwidth,
-                        short spreading_factor,
-                        short code_rate);
+                        unsigned short spreading_factor,
+                        unsigned short code_rate);
     };
 
   } // namespace lora

@@ -28,6 +28,7 @@
 
 #define LORA_HISTORY_DEPTH       4
 #define REQUIRED_PREAMBLE_DEPTH  4
+#define REQUIRED_SFD_CHIRPS      2
 
 namespace gr {
   namespace lora {

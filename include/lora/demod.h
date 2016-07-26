@@ -33,7 +33,7 @@
 namespace gr {
   namespace lora {
 
-    enum state_t {
+    enum demod_state_t {
       S_RESET,
       S_DETECT_PREAMBLE,
       S_DETECT_SYNC,

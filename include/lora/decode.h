@@ -25,8 +25,19 @@
 #include <lora/api.h>
 #include <gnuradio/block.h>
 
+#define SYMBOL_TIMEOUT_COUNT   256
+
 namespace gr {
   namespace lora {
+
+    // enum decode_state_t {
+    //   S_RESET,
+    //   S_DEGRAY,
+    //   S_DEWHITEN,
+    //   S_DEINTERLEAVE,
+    //   S_FEC,
+    //   S_OUT
+    // };
 
     /*!
      * \brief <+description of block+>

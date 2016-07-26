@@ -283,9 +283,18 @@ namespace gr {
 
 
       case S_READ_PAYLOAD:
+        m_symbols.push_back((m_argmax_history[0]-m_preamble_idx+m_fft_size) % m_fft_size);
+        if (m_symbols.size() >= 8) m_state = S_OUT;
+        break;
+
+
+
+      case S_OUT:
         if (m_squelched)
         {
-          m_state = S_OUT;
+          m_state = S_RESET;
+          *out = (unsigned short)m_fft_size;
+          noutput_items = 1;
         }
         else
         {
@@ -298,11 +307,6 @@ namespace gr {
           noutput_items = 1;
         }
 
-        break;
-
-
-
-      case S_OUT:
         // std::cout << "Received frame:" << std::endl;
         // for (int i = 8; i < m_symbols.size(); i++)
         // {
@@ -310,7 +314,7 @@ namespace gr {
         // }
 
         // noutput_items = m_symbols.size();
-        m_state = S_RESET;
+        // m_state = S_RESET;
 
         break;
 

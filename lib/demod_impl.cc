@@ -29,7 +29,7 @@
 #define DEBUG_INFO    1
 #define DEBUG_VERBOSE 2
 #define DEBUG_ULTRA   3
-#define DEBUG         DEBUG_VERBOSE
+#define DEBUG         DEBUG_OFF
 
 #define OVERLAP_DEFAULT 1
 #define OVERLAP_FACTOR  8
@@ -210,6 +210,7 @@ namespace gr {
         if (m_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
         {
           m_state = S_DETECT_PREAMBLE;
+          std::cout << "Ready for preamble..." << std::endl;
 #if DEBUG >= DEBUG_INFO
           std::cout << "New state: S_DETECT_PREAMBLE" << std::endl;
 #endif

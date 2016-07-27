@@ -75,6 +75,11 @@ namespace gr {
                   unsigned short code_rate);
       ~demod_impl();
 
+      // void dechirp(gr_complex *fft_result, 
+      //              gr_complex *input, 
+      //              std::vector<gr_complex> chirp, 
+      //              unsigned short overlaps);
+
       unsigned short argmax(gr_complex *fft_result, bool update_squelch);
 
       // Where all the action really happens

@@ -29,7 +29,7 @@
 #define DEBUG_INFO    1
 #define DEBUG_VERBOSE 2
 #define DEBUG_ULTRA   3
-#define DEBUG         DEBUG_OFF
+#define DEBUG         DEBUG_VERBOSE
 
 #define OVERLAP_DEFAULT 1
 #define OVERLAP_FACTOR  8
@@ -88,7 +88,7 @@ namespace gr {
       // float phase = 0;
       double accumulator = 0;
 
-      for (int i = 0; i < m_fft_size; i++) {
+      for (int i = 0; i < 2*m_fft_size; i++) {
         accumulator += phase;
         m_upchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
         m_downchirp.push_back(gr_complex(std::polar(1.0, accumulator)));
@@ -109,8 +109,24 @@ namespace gr {
       delete m_fft;
     }
 
+    // void
+    // dechirp(gr_complex *fft_result, 
+    //         gr_complex *input, 
+    //         std::vector<gr_complex> chirp, 
+    //         unsigned short overlaps)
+    // {
+    //   gr_complex *block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
+
+    //   volk_32fc_x2_multiply_32fc(block, input, &chirp[0], m_fft_size);
+
+    //   memcpy(m_fft->get_inbuf(), &down_block[0], m_fft_size*sizeof(gr_complex));
+    //   m_fft->execute();
+
+    // }
+
     unsigned short
-    demod_impl::argmax(gr_complex *fft_result, bool update_squelch)
+    demod_impl::argmax(gr_complex *fft_result, 
+                       bool update_squelch)
     {
       float magsq   = pow(real(fft_result[0]), 2) + pow(imag(fft_result[0]), 2);
       float max_val = magsq;
@@ -119,6 +135,7 @@ namespace gr {
 
       for (unsigned short i = 0; i < m_fft_size; i++) {
         magsq = pow(real(fft_result[i]), 2) + pow(imag(fft_result[i]), 2);
+        // std::cout << "i " << i << " magsq " << magsq << std::endl;
         if (magsq > max_val)
         {
           max_idx = i;
@@ -139,7 +156,8 @@ namespace gr {
     }
 
     void
-    demod_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
+    demod_impl::forecast (int noutput_items,
+                          gr_vector_int &ninput_items_required)
     {
       // ninput_items_required[0] = pow(2, m_sf);
       ninput_items_required[0] = noutput_items * pow(2, m_sf);
@@ -151,14 +169,17 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
-      const gr_complex *in = (const gr_complex *) input_items[0];
-      unsigned short *out = (unsigned short *) output_items[0];
+      const gr_complex *in = (const gr_complex *)  input_items[0];
+      unsigned short  *out = (unsigned short   *) output_items[0];
+      unsigned short num_consumed = m_fft_size;
+
+      gr_complex *buffer = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
 
       unsigned short max_index = 0;
       bool preamble_found = false;
       bool sfd_found      = false;
-      gr_complex *up_block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
-      gr_complex *down_block = (gr_complex *)malloc(m_fft_size*sizeof(gr_complex));
+      gr_complex *up_block   = (gr_complex *)malloc(2*m_fft_size*sizeof(gr_complex));
+      gr_complex *down_block = (gr_complex *)malloc(  m_fft_size*sizeof(gr_complex));
 
       if (up_block == NULL || down_block == NULL)
       {
@@ -172,13 +193,14 @@ namespace gr {
       noutput_items = 0;
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(up_block, in, &m_downchirp[0], m_fft_size);
-      volk_32fc_x2_multiply_32fc(down_block, in, &m_upchirp[0], m_fft_size);
+      volk_32fc_x2_multiply_32fc(  up_block, in, &m_downchirp[0], 2*m_fft_size);
+      volk_32fc_x2_multiply_32fc(down_block, in,   &m_upchirp[0], m_fft_size);
 
-      f_up.write((const char*)&up_block[0], m_fft_size*sizeof(gr_complex));
+      f_up.write  ((const char*)&up_block[0]  , m_fft_size*sizeof(gr_complex));
       f_down.write((const char*)&down_block[0], m_fft_size*sizeof(gr_complex));
 
       // Preamble and Data FFT
+      memset(m_fft->get_inbuf(),              0, m_fft_size*sizeof(gr_complex));
       memcpy(m_fft->get_inbuf(), &down_block[0], m_fft_size*sizeof(gr_complex));
       m_fft->execute();
       // Take argmax of returned FFT (similar to MFSK demod)
@@ -190,17 +212,12 @@ namespace gr {
         m_argmax_history.pop_back();
       }
 
-      // SFD Downchirp FFT
-      memcpy(m_fft->get_inbuf(), &up_block[0], m_fft_size*sizeof(gr_complex));
-      m_fft->execute();
-      // Take argmax of returned FFT (similar to MFSK demod)
-      max_index = argmax(m_fft->get_outbuf(), false);
-      m_sfd_history.insert(m_sfd_history.begin(), max_index);
-
-      if (m_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
-      {
-        m_sfd_history.pop_back();
-      }
+      // // SFD Downchirp FFT
+      // memcpy(m_fft->get_inbuf(), &up_block[0], m_fft_size*sizeof(gr_complex));
+      // m_fft->execute();
+      // // Take argmax of returned FFT (similar to MFSK demod)
+      // max_index = argmax(m_fft->get_outbuf(), false);
+      // m_sfd_history.insert(m_sfd_history.begin(), max_index);
 
       switch (m_state) {
       case S_RESET:
@@ -237,7 +254,7 @@ namespace gr {
 
         if (preamble_found and !m_squelched)   // TODO and squelch open
         {
-          m_state = S_READ_PAYLOAD;   // TODO correct state
+          m_state = S_DETECT_SYNC;   // TODO correct state
 #if DEBUG >= DEBUG_INFO
           std::cout << "New state: S_DETECT_SYNC" << std::endl;
 #endif
@@ -247,32 +264,53 @@ namespace gr {
 
 
       case S_DETECT_SYNC:
-//         m_overlaps = 8;     // MAGIC
-//         m_sfd_idx = m_sfd_history[0];
+        std::cout << "STATE = DETECT_SYNC" << std::endl;
+        m_overlaps = OVERLAP_FACTOR;
 
-// #if DEBUG >= DEBUG_VERBOSE
-//         std::cout <<"SFD " << m_sfd_history[0] << " SFD SIZE " << m_sfd_history.size() << std::endl;
-// #endif
+        for (int ol = 0; ol < m_overlaps; ol++)
+        {
+          unsigned short offset = (ol*m_fft_size)/m_overlaps;
 
-//         if (m_sfd_history.size() >= REQUIRED_SFD_CHIRPS*m_overlaps)
-//         {
-//           sfd_found = true;
-//           for (int i = 1; i < REQUIRED_SFD_CHIRPS*m_overlaps; i++)
-//           {
-//             if (m_sfd_idx != m_sfd_history[i])
-//             {
-//               sfd_found = false;
-//             }
-//           }
+          for (int j = 0; j < m_fft_size; j++)
+          {
+            buffer[j] = up_block[offset+j];
+          }
 
-//           if (sfd_found)
-//           {
-//             m_state = S_READ_PAYLOAD;
-//   #if DEBUG >= DEBUG_INFO
-//             std::cout << "New state: S_READ_PAYLOAD" << std::endl;
-//   #endif
-//           }
-//         }
+          // std::cout << "FFT WINDOW START " << offset << std::endl;
+          max_index = 257;
+          memset(m_fft->get_inbuf(),      0, m_fft_size*sizeof(gr_complex));
+          memcpy(m_fft->get_inbuf(), buffer, m_fft_size*sizeof(gr_complex));
+          m_fft->execute();
+
+          // Take argmax of returned FFT (similar to MFSK demod)
+          max_index = argmax(m_fft->get_outbuf(), false);
+          m_sfd_history.insert(m_sfd_history.begin(), max_index);
+
+          if (m_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
+          {
+            m_sfd_history.pop_back();
+
+            sfd_found = true;
+            m_sfd_idx = m_sfd_history[0];
+
+            for (int i = 1; i < REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR; i++)
+            {
+              if (m_sfd_idx != m_sfd_history[i])
+              {
+                sfd_found = false;
+              }
+            }
+
+            if (sfd_found) {
+              m_state = S_OUT;
+              num_consumed = (ol*m_fft_size)/m_overlaps + m_fft_size;
+              // std::cout << "KICKED consumed " << (ol*m_fft_size)/m_overlaps << std::endl;
+              m_preamble_idx += ((ol*m_fft_size)/m_overlaps) % m_fft_size;
+              m_overlaps = OVERLAP_DEFAULT;
+              break;
+            }
+          }
+        }
 
         break;
 
@@ -325,10 +363,12 @@ namespace gr {
         break;
       }
 
-      consume_each (m_fft_size/m_overlaps);
+      // consume_each (m_fft_size/m_overlaps);
+      consume_each (num_consumed);
 
       free(up_block);
       free(down_block);
+      free(buffer);
 
       // Tell runtime system how many output items we produced.
       return noutput_items;

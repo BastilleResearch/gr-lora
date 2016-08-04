@@ -29,7 +29,7 @@
 #define DEBUG_INFO    1
 #define DEBUG_VERBOSE 2
 #define DEBUG_ULTRA   3
-#define DEBUG         DEBUG_VERBOSE
+#define DEBUG         DEBUG_INFO
 
 #define OVERLAP_DEFAULT 1
 #define OVERLAP_FACTOR  8
@@ -221,9 +221,21 @@ namespace gr {
 
       switch (m_state) {
       case S_RESET:
+        m_state = S_PREFILL;
+
         m_overlaps = OVERLAP_DEFAULT;
         m_symbols.clear();
+        m_argmax_history.clear();
+        m_sfd_history.clear();
 
+        std::cout << "New state: S_RESET" << std::endl;
+        std::cout << "New state: S_PREFILL" << std::endl;
+
+        break;
+
+
+
+      case S_PREFILL:
         if (m_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
         {
           m_state = S_DETECT_PREAMBLE;
@@ -254,7 +266,7 @@ namespace gr {
 
         if (preamble_found and !m_squelched)   // TODO and squelch open
         {
-          m_state = S_DETECT_SYNC;   // TODO correct state
+          m_state = S_READ_PAYLOAD;   // TODO correct state
 #if DEBUG >= DEBUG_INFO
           std::cout << "New state: S_DETECT_SYNC" << std::endl;
 #endif
@@ -264,7 +276,6 @@ namespace gr {
 
 
       case S_DETECT_SYNC:
-        std::cout << "STATE = DETECT_SYNC" << std::endl;
         m_overlaps = OVERLAP_FACTOR;
 
         for (int ol = 0; ol < m_overlaps; ol++)
@@ -277,13 +288,13 @@ namespace gr {
           }
 
           // std::cout << "FFT WINDOW START " << offset << std::endl;
-          max_index = 257;
           memset(m_fft->get_inbuf(),      0, m_fft_size*sizeof(gr_complex));
           memcpy(m_fft->get_inbuf(), buffer, m_fft_size*sizeof(gr_complex));
           m_fft->execute();
 
           // Take argmax of returned FFT (similar to MFSK demod)
           max_index = argmax(m_fft->get_outbuf(), false);
+          std::cout << max_index << std::endl;
           m_sfd_history.insert(m_sfd_history.begin(), max_index);
 
           if (m_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
@@ -295,18 +306,22 @@ namespace gr {
 
             for (int i = 1; i < REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR; i++)
             {
-              if (m_sfd_idx != m_sfd_history[i])
+              // if (m_sfd_idx != m_sfd_history[i])
+              if (abs(short(m_sfd_idx) - short(m_sfd_history[i])) >= LORA_SFD_TOLERANCE)
               {
                 sfd_found = false;
               }
             }
 
             if (sfd_found) {
-              m_state = S_OUT;
+              m_state = S_READ_PAYLOAD;
               num_consumed = (ol*m_fft_size)/m_overlaps + m_fft_size;
               // std::cout << "KICKED consumed " << (ol*m_fft_size)/m_overlaps << std::endl;
               m_preamble_idx += ((ol*m_fft_size)/m_overlaps) % m_fft_size;
               m_overlaps = OVERLAP_DEFAULT;
+#if DEBUG >= DEBUG_INFO
+              std::cout << "New state: S_READ_PAYLOAD" << std::endl;
+#endif
               break;
             }
           }
@@ -323,7 +338,12 @@ namespace gr {
 
       case S_READ_PAYLOAD:
         m_symbols.push_back((m_argmax_history[0]-m_preamble_idx+m_fft_size) % m_fft_size);
-        if (m_symbols.size() >= 8) m_state = S_OUT;
+        if (m_symbols.size() >= 8) {
+           m_state = S_OUT;
+#if DEBUG >= DEBUG_INFO
+            std::cout << "New state: S_OUT" << std::endl;
+#endif
+        }
         break;
 
 
@@ -337,7 +357,7 @@ namespace gr {
         }
         else
         {
-#if DEBUG >= DEBUG_VERBOSE
+#if DEBUG >= DEBUG_INFO
           std::cout << "LORA DEMOD SYMBOL   " << (unsigned short)((m_argmax_history[0] - m_preamble_idx+m_fft_size) % m_fft_size) << std::endl;
 #endif
           m_symbols.push_back((m_argmax_history[0]-m_preamble_idx+m_fft_size) % m_fft_size);

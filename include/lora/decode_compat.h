@@ -19,56 +19,44 @@
  */
 
 
-#ifndef INCLUDED_LORA_DEMOD_H
-#define INCLUDED_LORA_DEMOD_H
+#ifndef INCLUDED_LORA_DECODE_COMPAT_H
+#define INCLUDED_LORA_DECODE_COMPAT_H
 
 #include <lora/api.h>
-//#include <volk/volk.h>
 #include <gnuradio/block.h>
 
-#define LORA_HISTORY_DEPTH       2
-#define REQUIRED_PREAMBLE_DEPTH  4
-#define REQUIRED_SFD_CHIRPS      2
-#define LORA_SFD_TOLERANCE       2
+#define HAMMING_T1_BITMASK 0xAA  // 0b10101010
+#define HAMMING_T2_BITMASK 0x66  // 0b01100110
+#define HAMMING_T4_BITMASK 0x1E  // 0b00011110
+#define HAMMING_T8_BITMASK 0xFE  // 0b11111110
 
 namespace gr {
   namespace lora {
-
-    enum demod_state_t {
-      S_RESET,
-      S_PREFILL,
-      S_DETECT_PREAMBLE,
-      S_DETECT_SYNC,
-      S_TUNE_SYNC,
-      S_READ_PAYLOAD,
-      S_OUT
-    };
 
     /*!
      * \brief <+description of block+>
      * \ingroup lora
      *
      */
-    class LORA_API demod : virtual public gr::block
+    class LORA_API decode_compat : virtual public gr::block
     {
      public:
-      typedef boost::shared_ptr<demod> sptr;
+      typedef boost::shared_ptr<decode_compat> sptr;
 
       /*!
-       * \brief Return a shared_ptr to a new instance of lora::demod.
+       * \brief Return a shared_ptr to a new instance of lora::decode_compat.
        *
-       * To avoid accidental use of raw pointers, lora::demod's
+       * To avoid accidental use of raw pointers, lora::decode_compat's
        * constructor is in a private implementation
-       * class. lora::demod::make is the public interface for
+       * class. lora::decode_compat::make is the public interface for
        * creating new instances.
        */
-      static sptr make( int bandwidth,
-                        unsigned short spreading_factor,
-                        unsigned short code_rate);
+      static sptr make(  short spreading_factor,
+                         short code_rate);
     };
 
   } // namespace lora
 } // namespace gr
 
-#endif /* INCLUDED_LORA_DEMOD_H */
+#endif /* INCLUDED_LORA_DECODE_COMPAT_H */
 

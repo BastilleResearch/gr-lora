@@ -25,5 +25,6 @@ install(FILES
     demod.h
     decode.h
     mod.h
-    encode.h DESTINATION include/lora
+    encode.h
+    decode_compat.h DESTINATION include/lora
 )

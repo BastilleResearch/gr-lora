@@ -21,7 +21,14 @@
 #ifndef INCLUDED_LORA_MOD_IMPL_H
 #define INCLUDED_LORA_MOD_IMPL_H
 
+#include <vector>
+#include <complex>
+#include <fstream>
 #include <lora/mod.h>
+
+#define LORA_PREAMBLE_CHIRPS  8
+#define LORA_SYNCWORD0        3
+#define LORA_SYNCWORD1        4
 
 namespace gr {
   namespace lora {
@@ -29,16 +36,32 @@ namespace gr {
     class mod_impl : public mod
     {
      private:
-      // Nothing to declare in this block.
+      pmt::pmt_t d_in_port;
+      pmt::pmt_t d_out_port;
+
+      unsigned char d_sf;
+      unsigned char d_cr;
+      unsigned char d_interleaver_size;
+
+      unsigned short d_fft_size;
+
+      std::vector<gr_complex> d_upchirp;
+      std::vector<gr_complex> d_downchirp;
+
+      std::ofstream f_mod;
 
      public:
-      mod_impl();
+      mod_impl( int bandwidth,
+                short spreading_factor,
+                short code_rate);
       ~mod_impl();
+
+      void modulate (pmt::pmt_t msg);
 
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 
-      int general_work(int noutput_items,
+      int work(int noutput_items,
            gr_vector_int &ninput_items,
            gr_vector_const_void_star &input_items,
            gr_vector_void_star &output_items);

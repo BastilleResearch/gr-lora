@@ -30,6 +30,8 @@
 #define HAMMING_T4_BITMASK 0x1E  // 0b00011110
 #define HAMMING_T8_BITMASK 0xFE  // 0b11111110
 
+#define INTERLEAVER_BLOCK_SIZE 8
+
 namespace gr {
   namespace lora {
 
@@ -50,10 +52,12 @@ namespace gr {
               gr::io_signature::make(1, 1, sizeof(short)),
               gr::io_signature::make(0, 1, sizeof(unsigned char)))
     {
-      m_sf = 8;
-      m_cr = 4; 
+      d_sf = 8;
+      d_cr = 4; 
 
-      m_fft_size = (1 << spreading_factor);
+      d_interleaver_size = d_sf;
+
+      d_fft_size = (1 << spreading_factor);
     }
 
     /*
@@ -90,11 +94,10 @@ namespace gr {
     {
       for (int i = 0; i < symbols.size(); i++)
       {
-        symbols[i] = ((unsigned char)(symbols[i] & 0xFF) ^ m_whitening_sequence[i]) & 0xFF;
+        symbols[i] = ((unsigned char)(symbols[i] & 0xFF) ^ d_whitening_sequence[i]) & 0xFF;
       }
     }
 
-#define INTERLEAVER_BLOCK_SIZE 8
     void
     decode_impl::deinterleave(std::vector <unsigned short> &symbols,
                               std::vector <unsigned char> &codewords)
@@ -107,7 +110,7 @@ namespace gr {
 
       for (outer = 0; outer < symbols.size()/ppm; outer++)
       {
-        memset(block, 0, INTERLEAVER_BLOCK_SIZE*sizeof(unsigned char));
+        memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
         for (inner = 0; inner < ppm; inner++)
         {
@@ -227,28 +230,28 @@ namespace gr {
       // Tell runtime system how many input items we consumed on
       // each input stream.
 
-      m_symbols.push_back(symbol);
+      d_symbols.push_back(symbol);
 
-      if (symbol == m_fft_size)        // MAGIC word
+      if (symbol == d_fft_size)        // MAGIC word
       {
-        to_gray(m_symbols);
-        whiten(m_symbols);
+        to_gray(d_symbols);
+        whiten(d_symbols);
 
         // Remove header until whitening sequence is extended
-        m_symbols.erase(m_symbols.begin(), m_symbols.begin()+8);
+        d_symbols.erase(d_symbols.begin(), d_symbols.begin()+8);
 
-        deinterleave(m_symbols, m_codewords);
-        hamming_decode(m_codewords, m_bytes);
+        deinterleave(d_symbols, d_codewords);
+        hamming_decode(d_codewords, d_bytes);
 
-        print_payload(m_bytes);
+        print_payload(d_bytes);
 
-        m_symbols.clear();
-        m_codewords.clear();
-        m_bytes.clear();
+        d_symbols.clear();
+        d_codewords.clear();
+        d_bytes.clear();
       }
-      else if (m_symbols.size() > SYMBOL_TIMEOUT_COUNT)
+      else if (d_symbols.size() > SYMBOL_TIMEOUT_COUNT)
       {
-        m_symbols.clear();
+        d_symbols.clear();
       }
 
       consume_each (noutput_items);

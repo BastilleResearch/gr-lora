@@ -4,49 +4,27 @@
   <key>lora_demod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.demod(125000, 8, 4)</make>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
-<!--   <param>
+  <make>lora.demod($bandwidth, $spreading_factor, $code_rate)</make>
+
+  <param>
     <name>Bandwidth</name>
     <key>bandwidth</key>
-    <type>enum</type>
-    <option>
-      <name>125kHz</name>
-      <key>f125k</key>
-      <opt>125000</opt>
-    </option>
-    <option>
-      <name>250kHz</name>
-      <key>f125k</key>
-      <opt>250000</opt>
-    </option>
-    <option>
-      <name>500kHz</name>
-      <key>f125k</key>
-      <opt>500000</opt>
-    </option>
-  </param> -->
-  <!--
+    <value>125000</value>
+    <type>int</type>
+  </param>
   <param>
-    <name>Code Rate</name>
+    <name>Spreading Factor</name>
+    <key>spreading_factor</key>
+    <value>8</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Code Rate / # Parity Bits</name>
     <key>code_rate</key>
-    <type>enum</type>
-    <option>
-      <name>Code Rate</name>
-      <key>code_rate</key>
-      <opt>
-    </option>
-  </param> -->
+    <value>4</value>
+    <type>int</type>
+  </param>
 
-  <!-- Make one 'sink' node per input. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <sink>
     <name>in</name>
     <type>complex</type>

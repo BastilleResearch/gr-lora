@@ -46,7 +46,8 @@ namespace gr {
        * class. lora::encode::make is the public interface for
        * creating new instances.
        */
-      static sptr make();
+      static sptr make( short spreading_factor,
+                        short code_rate);
     };
 
   } // namespace lora

@@ -4,23 +4,21 @@
   <key>lora_decode_compat</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.decode_compat(8, 4)</make>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
-<!--   <param>
-    <name>...</name>
-    <key>...</key>
-    <type>...</type>
-  </param> -->
+  <make>lora.decode_compat($spreading_factor, $code_rate)</make>
 
-  <!-- Make one 'sink' node per input. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
+  <param>
+    <name>Spreading Factor</name>
+    <key>spreading_factor</key>
+    <value>8</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Code Rate / # Parity Bits</name>
+    <key>code_rate</key>
+    <value>4</value>
+    <type>int</type>
+  </param>
+
   <sink>
     <name>in</name>
     <type>short</type>

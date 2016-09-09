@@ -37,35 +37,35 @@ namespace gr {
     class demod_impl : public demod
     {
      private:
-      demod_state_t   m_state;
-      int             m_bw;
-      unsigned short  m_sf;
-      unsigned short  m_cr;
+      demod_state_t   d_state;
+      int             d_bw;
+      unsigned short  d_sf;
+      unsigned short  d_cr;
 
-      unsigned short  m_fft_size;
-      unsigned short  m_overlaps;
+      unsigned short  d_fft_size;
+      unsigned short  d_overlaps;
 
-      float           m_power;
-      float           m_threshold;
-      bool            m_squelched;
+      float           d_power;
+      float           d_threshold;
+      bool            d_squelched;
 
-      unsigned short  m_preamble_idx;
-      unsigned short  m_sfd_idx;
-      std::vector<unsigned short>  m_argmax_history;
-      std::vector<unsigned short>  m_sfd_history;
+      unsigned short  d_preamble_idx;
+      unsigned short  d_sfd_idx;
+      std::vector<unsigned short>  d_argmax_history;
+      std::vector<unsigned short>  d_sfd_history;
 
-      fft::fft_complex   *m_fft;
-      std::vector<float> m_window;
+      fft::fft_complex   *d_fft;
+      std::vector<float> d_window;
 
-      std::vector<gr_complex> m_dup;
-      std::vector<gr_complex> m_ddown;
+      std::vector<gr_complex> d_dup;
+      std::vector<gr_complex> d_ddown;
 
-      std::vector<gr_complex> m_upchirp;
-      std::vector<gr_complex> m_downchirp;
+      std::vector<gr_complex> d_upchirp;
+      std::vector<gr_complex> d_downchirp;
 
-      std::vector<gr_complex> m_dechirped;
+      std::vector<gr_complex> d_dechirped;
 
-      std::vector<unsigned short> m_symbols;
+      std::vector<unsigned short> d_symbols;
 
       std::ofstream f_up, f_down;
 

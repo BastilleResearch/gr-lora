@@ -1,38 +1,32 @@
 <?xml version="1.0"?>
 <block>
-  <name>encode</name>
+  <name>LoRa Encoder</name>
   <key>lora_encode</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.encode()</make>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
+  <make>lora.encode($spreading_factor, $code_rate)</make>
+
   <param>
-    <name>...</name>
-    <key>...</key>
-    <type>...</type>
+    <name>Spreading Factor</name>
+    <key>spreading_factor</key>
+    <value>8</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Code Rate / # Parity Bits</name>
+    <key>code_rate</key>
+    <value>4</value>
+    <type>int</type>
   </param>
 
-  <!-- Make one 'sink' node per input. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <sink>
     <name>in</name>
-    <type><!-- e.g. int, float, complex, byte, short, xxx_vector, ...--></type>
+    <type>message</type>
   </sink>
 
-  <!-- Make one 'source' node per output. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <source>
     <name>out</name>
-    <type><!-- e.g. int, float, complex, byte, short, xxx_vector, ...--></type>
+    <type>message</type>
+    <optional>1</optional>
   </source>
 </block>

@@ -33,6 +33,7 @@ list(APPEND lora_sources
     decode_impl.cc
     mod_impl.cc
     encode_impl.cc
+    decode_compat_impl.cc
 )
 
 set(lora_sources "${lora_sources}" PARENT_SCOPE)

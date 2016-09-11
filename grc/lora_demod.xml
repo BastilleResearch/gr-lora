@@ -37,6 +37,6 @@
        * optional (set to 1 for optional inputs) -->
   <source>
     <name>out</name>
-    <type>short</type>
+    <type>message</type>
   </source>
 </block>

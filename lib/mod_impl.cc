@@ -87,7 +87,7 @@ namespace gr {
     void
     mod_impl::modulate (pmt::pmt_t msg)
     {
-      pmt::pmt_t meta(pmt::car(msg));
+      // pmt::pmt_t meta(pmt::car(msg));
       pmt::pmt_t symbols(pmt::cdr(msg));
 
       size_t pkt_len(0);
@@ -134,7 +134,7 @@ namespace gr {
       std::cout << "MOD 0.2" << std::endl;
 
       // SFD Downchirps
-      for (int i = 0; i < 2*d_fft_size; i++)
+      for (int i = 0; i < (2*d_fft_size+d_fft_size/4); i++)
       {
         iq_out.push_back(d_downchirp[(LORA_SYNCWORD1 + i) % d_fft_size]);   // Downchirps start where sync word ends
       }
@@ -160,7 +160,7 @@ namespace gr {
       std::cout << "MOD HERE 2" << std::endl;
 
       pmt::pmt_t output = pmt::init_c32vector(iq_out.size(), iq_out);
-      pmt::pmt_t msg_pair = pmt::cons(meta, output);
+      pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
       message_port_pub(d_out_port, msg_pair);
     }
 

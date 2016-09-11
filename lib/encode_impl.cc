@@ -111,6 +111,19 @@ namespace gr {
     }
 
     void
+    encode_impl::il_block_print(unsigned char *block)
+    {
+      for (int i = 0; i < INTERLEAVER_BLOCK_SIZE; i++)
+      {
+        for (int j = INTERLEAVER_BLOCK_SIZE-1; j >=0 ; j--)
+        {
+          printf("%d ", (block[i] & (0x01 << j)) ? 1 : 0);
+        }
+        printf("\n");
+      }
+    }
+
+    void
     encode_impl::interleave(std::vector <unsigned short> &codewords,
                             std::vector <unsigned short> &symbols)
     {
@@ -119,50 +132,80 @@ namespace gr {
       int outer = 0;
       unsigned char block[INTERLEAVER_BLOCK_SIZE] = {0};
       unsigned char word = 0;
+      unsigned char temp_word = 0;
 
       // for (outer = 0; outer < codewords.size()/ppm; outer++)
       // {
-      //   memset(block, 0, INTERLEAVER_BLOCK_SIZE*sizeof(unsigned char));
+      //   memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
-      //   // codewords[i+0] = codewords[i+0];
-      //   // codewords[i+1] = codewords[i+7];
-      //   // codewords[i+2] = codewords[i+2];
-      //   // codewords[i+3] = codewords[i+1];
-      //   // codewords[i+4] = codewords[i+4];
-      //   // codewords[i+5] = codewords[i+3];
-      //   // codewords[i+6] = codewords[i+6];
-      //   // codewords[i+7] = codewords[i+5];
-
-      //   for (inner = 0; inner < ppm; inner++)
+      //   for (inner = 0; inner < INTERLEAVER_BLOCK_SIZE; inner++)
       //   {
-      //     // Most significant bits are flipped
-      //     word = ((128 & symbols[ppm*outer+(inner+2)%ppm]) >> 1) | ((64 & symbols[ppm*outer+(inner+1)%ppm]) << 1) | (32 & symbols[ppm*outer+(inner+3)%ppm]) | (16 & symbols[ppm*outer+(inner+4)%ppm]) \
-      //               | (8 & symbols[ppm*outer+(inner+5)%ppm]) | (4 & symbols[ppm*outer+(inner+6)%ppm]) | (2 & symbols[ppm*outer+(inner+7)%ppm]) | (1 & symbols[ppm*outer+(inner+8)%ppm]);
-
-      //     // Reverse endianness
-      //     word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
-      //     word &= 0xFF;
-
-      //     // Rotate
-      //     word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
-      //     word &= 0xFF;
-
-      //     // Reorder into hamming format. Hamming parity bits p3 and p4 are flipped OTA, so format to be corrected is p1,p2,p4,p3,d1,d2,d3,d4
-      //     // Final bit order is p1,p2,d1,p3,d2,d3,d4,p4
-      //     word = ((word & 128)) | ((word & 64)) | ((word & 32) >> 5) | ((word & 16)) | ((word & 8) << 2) | ((word & 4) << 1) | ((word & 2) << 1) | ((word & 1) << 1);
-
-      //     block[inner] = word & 0xFF;
+      //     block[inner] = (codeword[outer+inner*INTERLEAVER_BLOCK_SIZE] << inner) | (codeword[outer+inner*INTERLEAVER_BLOCK_SIZE] >> INTERLEAVER_BLOCK_SIZE-inner);
       //   }
 
-      //   symbols.push_back(block[0]);
-      //   symbols.push_back(block[7]);
-      //   symbols.push_back(block[2]);
-      //   symbols.push_back(block[1]);
-      //   symbols.push_back(block[4]);
-      //   symbols.push_back(block[3]);
-      //   symbols.push_back(block[6]);
-      //   symbols.push_back(block[5]);
+      //   il_block_print(block);
+
+      //   // for (inner = 0; inner < ppm; inner++)
+      //   // {
+      //   //   // Rotate codeword within frame
+      //   //   word = (word >> (inner-1)%ppm) | (word << (ppm-inner+1)%ppm);
+      //   //   // word = (word >> (inner+1)%ppm) | (word << (ppm-inner-1)%ppm);
+
+      //   //   word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
+
+      //   //   word = ((128 & symbols[ppm*outer+(inner+2)%ppm]) >> 1) | ((64 & symbols[ppm*outer+(inner+1)%ppm]) << 1) | (32 & symbols[ppm*outer+(inner+3)%ppm]) | (16 & symbols[ppm*outer+(inner+4)%ppm]) \
+      //   //   | (8 & symbols[ppm*outer+(inner+5)%ppm]) | (4 & symbols[ppm*outer+(inner+6)%ppm]) | (2 & symbols[ppm*outer+(inner+7)%ppm]) | (1 & symbols[ppm*outer+(inner+8)%ppm]);
+
+      //   // }
+
+      //   for (int i = 0; i < INTERLEAVER_BLOCK_SIZE; i++) {
+      //     symbols.push_back(block[i]);
+      //   }
       // }
+
+      // // for (outer = 0; outer < codewords.size()/ppm; outer++)
+      // // {
+      // //   memset(block, 0, INTERLEAVER_BLOCK_SIZE*sizeof(unsigned char));
+
+      // //   // codewords[i+0] = codewords[i+0];
+      // //   // codewords[i+1] = codewords[i+7];
+      // //   // codewords[i+2] = codewords[i+2];
+      // //   // codewords[i+3] = codewords[i+1];
+      // //   // codewords[i+4] = codewords[i+4];
+      // //   // codewords[i+5] = codewords[i+3];
+      // //   // codewords[i+6] = codewords[i+6];
+      // //   // codewords[i+7] = codewords[i+5];
+
+      // //   for (inner = 0; inner < ppm; inner++)
+      // //   {
+      // //     // Most significant bits are flipped
+      // //     word = ((128 & symbols[ppm*outer+(inner+2)%ppm]) >> 1) | ((64 & symbols[ppm*outer+(inner+1)%ppm]) << 1) | (32 & symbols[ppm*outer+(inner+3)%ppm]) | (16 & symbols[ppm*outer+(inner+4)%ppm]) \
+      // //               | (8 & symbols[ppm*outer+(inner+5)%ppm]) | (4 & symbols[ppm*outer+(inner+6)%ppm]) | (2 & symbols[ppm*outer+(inner+7)%ppm]) | (1 & symbols[ppm*outer+(inner+8)%ppm]);
+
+      // //     // Reverse endianness
+      // //     word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
+      // //     word &= 0xFF;
+
+      // //     // Rotate
+      // //     word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
+      // //     word &= 0xFF;
+
+      // //     // Reorder into hamming format. Hamming parity bits p3 and p4 are flipped OTA, so format to be corrected is p1,p2,p4,p3,d1,d2,d3,d4
+      // //     // Final bit order is p1,p2,d1,p3,d2,d3,d4,p4
+      // //     word = ((word & 128)) | ((word & 64)) | ((word & 32) >> 5) | ((word & 16)) | ((word & 8) << 2) | ((word & 4) << 1) | ((word & 2) << 1) | ((word & 1) << 1);
+
+      // //     block[inner] = word & 0xFF;
+      // //   }
+
+      // //   symbols.push_back(block[0]);
+      // //   symbols.push_back(block[7]);
+      // //   symbols.push_back(block[2]);
+      // //   symbols.push_back(block[1]);
+      // //   sym bols.push_back(block[4]);
+      // //   symbols.push_back(block[3]);
+      // //   symbols.push_back(block[6]);
+      // //   symbols.push_back(block[5]);
+      // // }
 
       for (int i = 0; i < codewords.size(); i++)
       {
@@ -228,21 +271,17 @@ namespace gr {
     void
     encode_impl::encode (pmt::pmt_t msg)
     {
-      pmt::pmt_t meta(pmt::car(msg));
+      // pmt::pmt_t meta(pmt::car(msg));
       pmt::pmt_t bytes(pmt::cdr(msg));
 
       size_t pkt_len(0);
-      // unsigned int output_len = 2*pkt_len;
-      unsigned int output_len = 8;
       const uint8_t* bytes_in = pmt::u8vector_elements(bytes, pkt_len);
-      uint16_t* words_out = (uint16_t*)volk_malloc(output_len*sizeof(uint16_t), volk_get_alignment());
 
       std::cout << "ENCODE pkt_len: " << pkt_len << std::endl;
 
-      std::vector<uint8_t> nybbles;
-
-      d_codewords.clear();
-      d_symbols.clear();
+      std::vector<unsigned char> nybbles;
+      std::vector<unsigned short> symbols;
+      std::vector<unsigned short> codewords;
 
       for (int i = 0; i < pkt_len; i++)
       {
@@ -250,34 +289,18 @@ namespace gr {
         nybbles.push_back((bytes_in[i] & 0x0F));
       }
 
-      hamming_encode(nybbles, d_codewords);
-      std::cout << "ENCODE hamming_encode DONE" << std::endl;
-      interleave(d_codewords, d_symbols);
-      std::cout << "ENCODE interleave DONE" << std::endl;
-      whiten(d_symbols);
-      std::cout << "ENCODE whiten DONE" << std::endl;
-      from_gray(d_symbols);
-      std::cout << "ENCODE from_gray DONE" << std::endl;
+      hamming_encode(nybbles, codewords);
+      interleave(codewords, symbols);
+      whiten(symbols);
+      from_gray(symbols);
 
-      std::cout << "ENCODE output_len: " << output_len << std::endl;
+      pmt::pmt_t output = pmt::init_u16vector(symbols.size(), symbols);
+      pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
 
-      for (int i = 0; i < output_len; i++)
-      {
-        std::cout << "ENCODE words_out: " << i << "\t\t" << words_out[i] << std::endl;
-      }
-
-      pmt::pmt_t output = pmt::init_u16vector(output_len, words_out);
-      pmt::pmt_t msg_pair = pmt::cons(meta, output);
-
-
-      std::cout << "ENCODE meta: " << output << std::endl;
-      std::cout << "ENCODE output: " << output << std::endl;
+      std::cout << "ENCODE symbols_size" << symbols.size() << std::endl;
       std::cout << "ENCODE msg_pair: " << output << std::endl;
 
       message_port_pub(d_out_port, msg_pair);
-      volk_free(words_out);
-
-      std::cout << "ENCODE HERE DONE" << std::endl;
     }
 
     void

@@ -37,6 +37,8 @@ namespace gr {
     class demod_impl : public demod
     {
      private:
+      pmt::pmt_t d_out_port;
+
       demod_state_t   d_state;
       int             d_bw;
       unsigned short  d_sf;

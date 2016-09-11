@@ -40,10 +40,6 @@ namespace gr {
 
       unsigned short d_fft_size;
 
-      std::vector<unsigned short> d_symbols;
-      std::vector<unsigned short> d_codewords;
-      std::vector<unsigned char> d_bytes;
-
      public:
       encode_impl(  short spreading_factor,
                     short code_rate);
@@ -56,6 +52,8 @@ namespace gr {
       void hamming_encode(std::vector<unsigned char> &nybbles, std::vector<unsigned short> &codewords);
       unsigned char parity(unsigned char c, unsigned char bitmask);
       void print_payload(std::vector<unsigned char> &payload);
+
+      void il_block_print(unsigned char *block);
 
       void encode(pmt::pmt_t msg);
 

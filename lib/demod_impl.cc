@@ -43,7 +43,7 @@ namespace gr {
                   unsigned short code_rate)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(125000, 8, 4));
+        (new demod_impl(125000, spreading_factor, code_rate));
     }
 
     /*
@@ -54,10 +54,15 @@ namespace gr {
                             unsigned short code_rate)
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(0, 1, sizeof(unsigned short))),
+              gr::io_signature::make(0, 0, 0)),
+              // gr::io_signature::make(0, 1, sizeof(unsigned short))),
         f_up("up.out", std::ios::out),
         f_down("down.out", std::ios::out)
     {
+      d_out_port = pmt::mp("out");
+
+      message_port_register_out(d_out_port);
+
       d_state = S_RESET;
       d_bw    = bandwidth;
       d_sf    = spreading_factor;
@@ -351,6 +356,22 @@ namespace gr {
       case S_OUT:
         if (d_squelched)
         {
+          // for (int zx = 0; zx < d_symbols.size(); zx++)
+          // {
+          //   std::cout << "LOLOL " << d_symbols[zx] << std::endl;
+          // }
+
+          pmt::pmt_t output = pmt::init_u16vector(d_symbols.size(), d_symbols);
+          pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
+          message_port_pub(d_out_port, msg_pair);
+        }
+        else
+        {
+          d_symbols.push_back((d_argmax_history[0]-d_preamble_idx+d_fft_size) % d_fft_size);
+        }
+#if 0
+        if (d_squelched)
+        {
           d_state = S_RESET;
           *out = (unsigned short)d_fft_size;
           noutput_items = 1;
@@ -365,6 +386,7 @@ namespace gr {
           *out = (unsigned short)((d_argmax_history[0]-d_preamble_idx+d_fft_size) % d_fft_size);
           noutput_items = 1;
         }
+#endif
 
         // std::cout << "Received frame:" << std::endl;
         // for (int i = 8; i < d_symbols.size(); i++)

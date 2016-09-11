@@ -49,9 +49,19 @@ namespace gr {
     decode_impl::decode_impl( short spreading_factor,
                               short code_rate)
       : gr::block("decode",
-              gr::io_signature::make(1, 1, sizeof(short)),
-              gr::io_signature::make(0, 1, sizeof(unsigned char)))
+              gr::io_signature::make(0, 0, 0),
+              gr::io_signature::make(0, 0, 0))
+              // gr::io_signature::make(1, 1, sizeof(short)),
+              // gr::io_signature::make(0, 1, sizeof(unsigned char)))
     {
+      d_in_port = pmt::mp("in");
+      d_out_port = pmt::mp("out");
+
+      message_port_register_in(d_in_port);
+      message_port_register_out(d_out_port);
+
+      set_msg_handler(d_in_port, boost::bind(&decode_impl::decode, this, _1));
+
       d_sf = 8;
       d_cr = 4; 
 
@@ -208,6 +218,49 @@ namespace gr {
     }
 
     void
+    decode_impl::decode(pmt::pmt_t msg)
+    {
+      // pmt::pmt_t meta(pmt::car(msg));
+      pmt::pmt_t symbols(pmt::cdr(msg));
+
+      size_t pkt_len(0);
+      const uint16_t* symbols_v = pmt::u16vector_elements(symbols, pkt_len);
+
+      std::vector<unsigned short> symbols_in;
+      std::vector<unsigned char> codewords;
+      std::vector<unsigned char> bytes;
+
+      for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
+
+      // Lop off preamble, sync word, and SFD
+      symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+
+      to_gray(symbols_in);
+      // std::cout << "DECODE 0" << std::endl;
+      whiten(symbols_in);
+      // std::cout << "DECODE 1" << std::endl;
+
+      // Remove header until whitening sequence is extended
+      // std::cout << "DECODE d_symbols size before: " << symbols_in.size() << std::endl;
+      // d_symbols.erase(symbols_in.begin(), symbols_in.begin()+8);
+      symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+      // std::cout << "DECODE d_symbols size after: " << symbols_in.size() << std::endl;
+      // std::cout << "DECODE 2" << std::endl;
+
+      deinterleave(symbols_in, codewords);
+      // std::cout << "DECODE 3" << std::endl;
+      hamming_decode(codewords, bytes);
+      // std::cout << "DECODE 4" << std::endl;
+
+      print_payload(bytes);
+      // std::cout << "DECODE 5" << std::endl;
+
+      pmt::pmt_t output = pmt::init_u8vector(bytes.size(), bytes);
+      pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
+      message_port_pub(d_out_port, msg_pair);
+    }
+
+    void
     decode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
        // <+forecast+> e.g. ninput_items_required[0] = noutput_items
@@ -220,6 +273,7 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
+#if 0
       const unsigned short *in = (const unsigned short *) input_items[0];
       // unsigned char *out = (unsigned char *) output_items[0];
       unsigned short symbol = (unsigned short)*in;
@@ -255,7 +309,7 @@ namespace gr {
       }
 
       consume_each (noutput_items);
-
+#endif
       // Tell runtime system how many output items we produced.
       return noutput_items;
     }

@@ -46,15 +46,11 @@ namespace gr {
                         short code_rate)
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
-              gr::io_signature::make(0, 0, 0)),
+              gr::io_signature::make(1, 1, sizeof(gr_complex))),
         f_mod("mod.out", std::ios::out)
     {
       d_in_port = pmt::mp("in");
-      d_out_port = pmt::mp("out");
-
       message_port_register_in(d_in_port);
-      message_port_register_out(d_out_port);
-
       set_msg_handler(d_in_port, boost::bind(&mod_impl::modulate, this, _1));
 
       d_sf = spreading_factor;
@@ -87,7 +83,6 @@ namespace gr {
     void
     mod_impl::modulate (pmt::pmt_t msg)
     {
-      // pmt::pmt_t meta(pmt::car(msg));
       pmt::pmt_t symbols(pmt::cdr(msg));
 
       size_t pkt_len(0);
@@ -99,10 +94,10 @@ namespace gr {
 
       std::vector<gr_complex> iq_out;
 
-      std::cout << "MOD HERE 0" << std::endl;
-      std::cout << "MOD pkt_len: " << pkt_len << std::endl;
-      std::cout << "MOD len_chirp_table: " << d_upchirp.size() << std::endl;
-      std::cout << "MOD d_fft_size: " << d_fft_size << std::endl;
+      // std::cout << "MOD HERE 0" << std::endl;
+      // std::cout << "MOD pkt_len: " << pkt_len << std::endl;
+      // std::cout << "MOD len_chirp_table: " << d_upchirp.size() << std::endl;
+      // std::cout << "MOD d_fft_size: " << d_fft_size << std::endl;
 
       for (int i = 0; i < pkt_len; i++)
       {
@@ -150,18 +145,18 @@ namespace gr {
         }
       }
 
-      std::cout << "MOD HERE 1" << std::endl;
-      std::cout << "MOD pkt_len: " << pkt_len << std::endl;
-      std::cout << "MOD iq_out.size(): " << iq_out.size() << std::endl;
-      std::cout << "MOD num bytes required: " << iq_out.size()*sizeof(gr_complex) << std::endl;
+      // Append samples to IQ output buffer
+      for (int i = 0; i < iq_out.size(); i++)
+      {
+        d_iq_out.push_back(iq_out[i]);  // Exposes local packet for debugging
+      }
 
-      f_mod.write((const char *)&iq_out[0], iq_out.size()*sizeof(gr_complex));
+      // std::cout << "MOD HERE 1" << std::endl;
+      // std::cout << "MOD pkt_len: " << pkt_len << std::endl;
+      // std::cout << "MOD iq_out.size(): " << iq_out.size() << std::endl;
+      // std::cout << "MOD num bytes required: " << iq_out.size()*sizeof(gr_complex) << std::endl;
 
-      std::cout << "MOD HERE 2" << std::endl;
-
-      pmt::pmt_t output = pmt::init_c32vector(iq_out.size(), iq_out);
-      pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
-      message_port_pub(d_out_port, msg_pair);
+      // f_mod.write((const char *)&iq_out[0], iq_out.size()*sizeof(gr_complex));
     }
 
     void
@@ -171,20 +166,20 @@ namespace gr {
     }
 
     int
-    mod_impl::work (int noutput_items,
+    mod_impl::general_work (int noutput_items,
                        gr_vector_int &ninput_items,
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
-      // const unsigned short *in = (const unsigned short *) input_items[0];
-      // gr_complex *out = (gr_complex *) output_items[0];
+      gr_complex *out = (gr_complex *) output_items[0];
+      unsigned int noutput_samples = (noutput_items > d_iq_out.size()) ? d_iq_out.size() : noutput_items;
 
-      // Do <+signal processing+>
-      // Tell runtime system how many input items we consumed on
-      // each input stream.
-      // consume_each (noutput_items);
+      if (noutput_samples)
+      {
+        memcpy(out, &d_iq_out[0], noutput_samples*sizeof(gr_complex));
+        d_iq_out.erase(d_iq_out.begin(), d_iq_out.begin()+noutput_samples);
+      }
 
-      // Tell runtime system how many output items we produced.
       return noutput_items;
     }
 

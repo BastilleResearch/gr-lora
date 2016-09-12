@@ -37,7 +37,6 @@ namespace gr {
     {
      private:
       pmt::pmt_t d_in_port;
-      pmt::pmt_t d_out_port;
 
       unsigned char d_sf;
       unsigned char d_cr;
@@ -47,6 +46,8 @@ namespace gr {
 
       std::vector<gr_complex> d_upchirp;
       std::vector<gr_complex> d_downchirp;
+
+      std::vector<gr_complex> d_iq_out;
 
       std::ofstream f_mod;
 
@@ -61,7 +62,7 @@ namespace gr {
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 
-      int work(int noutput_items,
+      int general_work(int noutput_items,
            gr_vector_int &ninput_items,
            gr_vector_const_void_star &input_items,
            gr_vector_void_star &output_items);

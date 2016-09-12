@@ -26,7 +26,7 @@
 #include <fstream>
 #include <lora/mod.h>
 
-#define LORA_PREAMBLE_CHIRPS  8
+#define NUM_PREAMBLE_CHIRPS   8
 #define LORA_SYNCWORD0        3
 #define LORA_SYNCWORD1        4
 

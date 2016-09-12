@@ -46,6 +46,7 @@ namespace gr {
 
       unsigned short  d_fft_size;
       unsigned short  d_overlaps;
+      unsigned short  d_offset;
 
       float           d_power;
       float           d_threshold;
@@ -76,11 +77,6 @@ namespace gr {
                   unsigned short spreading_factor,
                   unsigned short code_rate);
       ~demod_impl();
-
-      // void dechirp(gr_complex *fft_result, 
-      //              gr_complex *input, 
-      //              std::vector<gr_complex> chirp, 
-      //              unsigned short overlaps);
 
       unsigned short argmax(gr_complex *fft_result, bool update_squelch);
 

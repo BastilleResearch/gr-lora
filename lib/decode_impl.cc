@@ -51,8 +51,6 @@ namespace gr {
       : gr::block("decode",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(0, 0, 0))
-              // gr::io_signature::make(1, 1, sizeof(short)),
-              // gr::io_signature::make(0, 1, sizeof(unsigned char)))
     {
       d_in_port = pmt::mp("in");
       d_out_port = pmt::mp("out");
@@ -220,7 +218,6 @@ namespace gr {
     void
     decode_impl::decode(pmt::pmt_t msg)
     {
-      // pmt::pmt_t meta(pmt::car(msg));
       pmt::pmt_t symbols(pmt::cdr(msg));
 
       size_t pkt_len(0);
@@ -232,8 +229,8 @@ namespace gr {
 
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
 
-      // Lop off preamble, sync word, and SFD
-      symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+      // Lop off preamble, sync word, and SFD -- now properly framed by demod
+      // symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
 
       to_gray(symbols_in);
       // std::cout << "DECODE 0" << std::endl;

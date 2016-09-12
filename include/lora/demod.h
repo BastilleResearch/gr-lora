@@ -26,7 +26,7 @@
 //#include <volk/volk.h>
 #include <gnuradio/block.h>
 
-#define LORA_HISTORY_DEPTH       2
+#define DEMOD_HISTORY_DEPTH      3
 #define REQUIRED_PREAMBLE_DEPTH  4
 #define REQUIRED_SFD_CHIRPS      2
 #define LORA_SFD_TOLERANCE       2

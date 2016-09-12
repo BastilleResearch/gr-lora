@@ -86,10 +86,6 @@ namespace gr {
       pmt::pmt_t symbols(pmt::cdr(msg));
 
       size_t pkt_len(0);
-      size_t output_len = LORA_PREAMBLE_CHIRPS*d_fft_size   // Preamble
-                          + 2*d_fft_size                    // Sync word
-                          + 2*d_fft_size                    // SFD downchirps
-                          + pkt_len*d_fft_size;             // Payload
       const uint16_t* symbols_in = pmt::u16vector_elements(symbols, pkt_len);
 
       std::vector<gr_complex> iq_out;
@@ -105,7 +101,7 @@ namespace gr {
       } 
 
       // Preamble
-      for (int i = 0; i < LORA_PREAMBLE_CHIRPS*d_fft_size; i++)
+      for (int i = 0; i < NUM_PREAMBLE_CHIRPS*d_fft_size; i++)
       {
         iq_out.push_back(d_upchirp[(i) % d_fft_size]);
       }

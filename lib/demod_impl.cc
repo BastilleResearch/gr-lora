@@ -179,8 +179,11 @@ namespace gr {
       volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], 2*d_fft_size);
       volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
 
-      // f_up.write  ((const char*)&up_block[0]  , d_fft_size*sizeof(gr_complex));
-      // f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+      if (d_state == S_READ_PAYLOAD)
+      {
+        f_up.write  ((const char*)&up_block[0]  , d_fft_size*sizeof(gr_complex));
+        f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+      }
 
       // Preamble and Data FFT
       memset(d_fft->get_inbuf(),              0, d_fft_size*sizeof(gr_complex));
@@ -298,9 +301,11 @@ namespace gr {
 
             if (sfd_found) {
               d_state = S_READ_PAYLOAD;
-              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;
+              // num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;
+              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size + d_fft_size/4;
               // std::cout << "KICKED consumed " << (ol*d_fft_size)/d_overlaps << std::endl;
-              d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps) % d_fft_size;
+              d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps + d_fft_size/4) % d_fft_size;
+              // d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps) % d_fft_size;
               d_overlaps = OVERLAP_DEFAULT;
 
               #if DEBUG >= DEBUG_INFO

@@ -4,7 +4,7 @@
   <key>lora_encode</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.encode($spreading_factor, $code_rate)</make>
+  <make>lora.encode($spreading_factor, $code_rate, $header)</make>
 
   <param>
     <name>Spreading Factor</name>
@@ -18,6 +18,13 @@
     <value>4</value>
     <type>int</type>
   </param>
+  <param>
+    <name>Header</name>
+    <key>header</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+
 
   <sink>
     <name>in</name>

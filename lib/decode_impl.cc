@@ -39,17 +39,19 @@ namespace gr {
 
     decode::sptr
     decode::make(   short spreading_factor,
-                    short code_rate)
+                    short code_rate,
+                    bool  header)
     {
       return gnuradio::get_initial_sptr
-        (new decode_impl(8, 4));
+        (new decode_impl(spreading_factor, code_rate, header));
     }
 
     /*
      * The private constructor
      */
     decode_impl::decode_impl( short spreading_factor,
-                              short code_rate)
+                              short code_rate,
+                              bool  header)
       : gr::block("decode",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(0, 0, 0))
@@ -64,6 +66,7 @@ namespace gr {
 
       d_sf = 8;
       d_cr = 4; 
+      d_header = (header) ? true : false;
 
       d_interleaver_size = d_sf;
 
@@ -122,6 +125,15 @@ namespace gr {
       {
         memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
+        std::cout << std::bitset<8>(symbols[8*outer+0]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+1]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+2]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+3]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+4]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+5]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+6]) << std::endl;
+        std::cout << std::bitset<8>(symbols[8*outer+7]) << std::endl;
+
         for (inner = 0; inner < ppm; inner++)
         {
           // Most significant bits are flipped
@@ -133,6 +145,7 @@ namespace gr {
           word &= 0xFF;
 
           // Rotate
+          std::cout << std::bitset<8>(word) << std::endl;
           word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
           word &= 0xFF;
 
@@ -142,6 +155,15 @@ namespace gr {
 
           block[inner] = word & 0xFF;
         }
+
+        // std::cout << std::bitset<8>(block[0]) << std::endl;
+        // std::cout << std::bitset<8>(block[1]) << std::endl;
+        // std::cout << std::bitset<8>(block[2]) << std::endl;
+        // std::cout << std::bitset<8>(block[3]) << std::endl;
+        // std::cout << std::bitset<8>(block[4]) << std::endl;
+        // std::cout << std::bitset<8>(block[5]) << std::endl;
+        // std::cout << std::bitset<8>(block[6]) << std::endl;
+        // std::cout << std::bitset<8>(block[7]) << std::endl;
 
         codewords.push_back(block[0]);
         codewords.push_back(block[7]);
@@ -245,6 +267,8 @@ namespace gr {
       std::vector<unsigned char> codewords;
       std::vector<unsigned char> bytes;
 
+      std::cout << "DEMOD Header: " << d_header << std::endl;
+
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
 
       // Lop off preamble, sync word, and SFD -- now properly framed by demod
@@ -258,7 +282,7 @@ namespace gr {
       // Remove header until whitening sequence is extended
       // std::cout << "DECODE d_symbols size before: " << symbols_in.size() << std::endl;
       // d_symbols.erase(symbols_in.begin(), symbols_in.begin()+8);
-      symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+      if (d_header) symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
       // std::cout << "DECODE d_symbols size after: " << symbols_in.size() << std::endl;
       // std::cout << "DECODE 2" << std::endl;
 

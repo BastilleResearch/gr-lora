@@ -27,6 +27,8 @@
 #include "encode_impl.h"
 #include "stdio.h"
 
+#include <bitset>
+
 #define HAMMING_T1_BITMASK 0x0D  // 0b00001101
 #define HAMMING_T2_BITMASK 0x0B  // 0b00001011
 #define HAMMING_T4_BITMASK 0x07  // 0b00000111
@@ -39,17 +41,19 @@ namespace gr {
 
     encode::sptr
     encode::make( short spreading_factor,
-                  short code_rate)
+                  short code_rate,
+                  bool  header)
     {
       return gnuradio::get_initial_sptr
-        (new encode_impl(spreading_factor, code_rate));
+        (new encode_impl(spreading_factor, code_rate, header));
     }
 
     /*
      * The private constructor
      */
     encode_impl::encode_impl( short spreading_factor,
-                              short code_rate)
+                              short code_rate,
+                              bool  header)
       : gr::block("encode",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(0, 0, 0))
@@ -66,6 +70,7 @@ namespace gr {
 
       d_sf = spreading_factor;
       d_cr = code_rate;
+      d_header = (header) ? true : false;
 
       d_interleaver_size = d_sf;
 
@@ -130,86 +135,75 @@ namespace gr {
       unsigned char ppm = 8;
       int inner = 0;
       int outer = 0;
+      unsigned char reordered[INTERLEAVER_BLOCK_SIZE] = {0};
       unsigned char block[INTERLEAVER_BLOCK_SIZE] = {0};
       unsigned char word = 0;
       unsigned char temp_word = 0;
 
-      // for (outer = 0; outer < codewords.size()/ppm; outer++)
-      // {
-      //   memset(block, 0, d_interleaver_size*sizeof(unsigned char));
-
-      //   for (inner = 0; inner < INTERLEAVER_BLOCK_SIZE; inner++)
-      //   {
-      //     block[inner] = (codeword[outer+inner*INTERLEAVER_BLOCK_SIZE] << inner) | (codeword[outer+inner*INTERLEAVER_BLOCK_SIZE] >> INTERLEAVER_BLOCK_SIZE-inner);
-      //   }
-
-      //   il_block_print(block);
-
-      //   // for (inner = 0; inner < ppm; inner++)
-      //   // {
-      //   //   // Rotate codeword within frame
-      //   //   word = (word >> (inner-1)%ppm) | (word << (ppm-inner+1)%ppm);
-      //   //   // word = (word >> (inner+1)%ppm) | (word << (ppm-inner-1)%ppm);
-
-      //   //   word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
-
-      //   //   word = ((128 & symbols[ppm*outer+(inner+2)%ppm]) >> 1) | ((64 & symbols[ppm*outer+(inner+1)%ppm]) << 1) | (32 & symbols[ppm*outer+(inner+3)%ppm]) | (16 & symbols[ppm*outer+(inner+4)%ppm]) \
-      //   //   | (8 & symbols[ppm*outer+(inner+5)%ppm]) | (4 & symbols[ppm*outer+(inner+6)%ppm]) | (2 & symbols[ppm*outer+(inner+7)%ppm]) | (1 & symbols[ppm*outer+(inner+8)%ppm]);
-
-      //   // }
-
-      //   for (int i = 0; i < INTERLEAVER_BLOCK_SIZE; i++) {
-      //     symbols.push_back(block[i]);
-      //   }
-      // }
-
-      // // for (outer = 0; outer < codewords.size()/ppm; outer++)
-      // // {
-      // //   memset(block, 0, INTERLEAVER_BLOCK_SIZE*sizeof(unsigned char));
-
-      // //   // codewords[i+0] = codewords[i+0];
-      // //   // codewords[i+1] = codewords[i+7];
-      // //   // codewords[i+2] = codewords[i+2];
-      // //   // codewords[i+3] = codewords[i+1];
-      // //   // codewords[i+4] = codewords[i+4];
-      // //   // codewords[i+5] = codewords[i+3];
-      // //   // codewords[i+6] = codewords[i+6];
-      // //   // codewords[i+7] = codewords[i+5];
-
-      // //   for (inner = 0; inner < ppm; inner++)
-      // //   {
-      // //     // Most significant bits are flipped
-      // //     word = ((128 & symbols[ppm*outer+(inner+2)%ppm]) >> 1) | ((64 & symbols[ppm*outer+(inner+1)%ppm]) << 1) | (32 & symbols[ppm*outer+(inner+3)%ppm]) | (16 & symbols[ppm*outer+(inner+4)%ppm]) \
-      // //               | (8 & symbols[ppm*outer+(inner+5)%ppm]) | (4 & symbols[ppm*outer+(inner+6)%ppm]) | (2 & symbols[ppm*outer+(inner+7)%ppm]) | (1 & symbols[ppm*outer+(inner+8)%ppm]);
-
-      // //     // Reverse endianness
-      // //     word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
-      // //     word &= 0xFF;
-
-      // //     // Rotate
-      // //     word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
-      // //     word &= 0xFF;
-
-      // //     // Reorder into hamming format. Hamming parity bits p3 and p4 are flipped OTA, so format to be corrected is p1,p2,p4,p3,d1,d2,d3,d4
-      // //     // Final bit order is p1,p2,d1,p3,d2,d3,d4,p4
-      // //     word = ((word & 128)) | ((word & 64)) | ((word & 32) >> 5) | ((word & 16)) | ((word & 8) << 2) | ((word & 4) << 1) | ((word & 2) << 1) | ((word & 1) << 1);
-
-      // //     block[inner] = word & 0xFF;
-      // //   }
-
-      // //   symbols.push_back(block[0]);
-      // //   symbols.push_back(block[7]);
-      // //   symbols.push_back(block[2]);
-      // //   symbols.push_back(block[1]);
-      // //   sym bols.push_back(block[4]);
-      // //   symbols.push_back(block[3]);
-      // //   symbols.push_back(block[6]);
-      // //   symbols.push_back(block[5]);
-      // // }
-
-      for (int i = 0; i < codewords.size(); i++)
+      for (outer = 0; outer < codewords.size()/ppm; outer++)
       {
-        symbols.push_back(codewords[i]);
+        memset(block, 0, d_interleaver_size*sizeof(unsigned char));
+
+        reordered[0] = codewords[0];
+        reordered[7] = codewords[1];
+        reordered[2] = codewords[2];
+        reordered[1] = codewords[3];
+        reordered[4] = codewords[4];
+        reordered[3] = codewords[5];
+        reordered[6] = codewords[6];
+        reordered[5] = codewords[7];
+
+        // for (int i = 0; i < 8; i++)
+        // {
+        //   std::cout << std::bitset<8>(block[i]) << std::endl;
+        // }
+
+        for (inner = 0; inner < INTERLEAVER_BLOCK_SIZE; inner++)
+        {
+          word = reordered[inner];
+
+          // Rotate
+          word = (word >> (inner+1)%ppm) | (word << (ppm-inner-1)%ppm);
+          word &= 0xFF;
+          // std::cout << std::bitset<8>(word) << std::endl;
+
+          // Reverse endianness
+          word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
+          word &= 0xFF;
+
+          // std::cout << std::bitset<8>(word) << std::endl;
+
+          // Flip most significant bits
+          // block[(inner+2) % ppm] |= (word & 128) >> 1;
+          // block[(inner+1) % ppm] |= (word & 64) << 1;
+          block[(inner+1) % ppm] |= (word & 128) >> 1;
+          block[(inner+2) % ppm] |= (word & 64) << 1;
+          block[(inner+3) % ppm] |= word & 32;
+          block[(inner+4) % ppm] |= word & 16;
+          block[(inner+5) % ppm] |= word & 8;
+          block[(inner+6) % ppm] |= word & 4;
+          block[(inner+7) % ppm] |= word & 2;
+          block[(inner+8) % ppm] |= word & 1;
+        }
+
+        std::cout << "ENCODE " << std::bitset<8>(block[0]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[1]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[2]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[3]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[4]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[5]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[6]) << std::endl;
+        std::cout << "ENCODE " << std::bitset<8>(block[7]) << std::endl;
+
+        symbols.push_back(block[0]);
+        symbols.push_back(block[1]);
+        symbols.push_back(block[2]);
+        symbols.push_back(block[3]);
+        symbols.push_back(block[4]);
+        symbols.push_back(block[5]);
+        symbols.push_back(block[6]);
+        symbols.push_back(block[7]);
+
       }
     }
 
@@ -282,6 +276,18 @@ namespace gr {
       std::vector<unsigned char> nybbles;
       std::vector<unsigned short> symbols;
       std::vector<unsigned short> codewords;
+
+      if (d_header)
+      {
+        nybbles.push_back(0x3);
+        nybbles.push_back(0x7);
+        nybbles.push_back(0x3);
+        nybbles.push_back(0x7);
+        nybbles.push_back(0x3);
+        nybbles.push_back(0x7);
+        nybbles.push_back(0x3);
+        nybbles.push_back(0x7);
+      }
 
       for (int i = 0; i < pkt_len; i++)
       {

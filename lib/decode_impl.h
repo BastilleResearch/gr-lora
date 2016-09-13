@@ -39,6 +39,7 @@ namespace gr {
       unsigned char d_sf;
       unsigned char d_cr;
       unsigned char d_interleaver_size;
+      bool d_header;
 
       unsigned short d_fft_size;
 
@@ -48,7 +49,8 @@ namespace gr {
 
      public:
       decode_impl(  short spreading_factor,
-                    short code_rate);
+                    short code_rate,
+                    bool  header);
       ~decode_impl();
 
       void to_gray(std::vector<unsigned short> &symbols);

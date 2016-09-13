@@ -47,7 +47,8 @@ namespace gr {
        * creating new instances.
        */
       static sptr make( short spreading_factor,
-                        short code_rate);
+                        short code_rate,
+                        bool  header);
     };
 
   } // namespace lora

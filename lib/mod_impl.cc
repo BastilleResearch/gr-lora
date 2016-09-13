@@ -95,6 +95,9 @@ namespace gr {
       // std::cout << "MOD len_chirp_table: " << d_upchirp.size() << std::endl;
       // std::cout << "MOD d_fft_size: " << d_fft_size << std::endl;
 
+      // Prepend zero-magnitude samples to kick squelch in simulation
+      d_iq_out.insert(d_iq_out.begin(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
+
       for (int i = 0; i < pkt_len; i++)
       {
         std::cout << "MOD INPUT: " << i << "\t\t" << symbols_in[i] << std::endl;
@@ -144,8 +147,11 @@ namespace gr {
       // Append samples to IQ output buffer
       for (int i = 0; i < iq_out.size(); i++)
       {
-        d_iq_out.push_back(iq_out[i]);  // Exposes local packet for debugging
+        d_iq_out.push_back(iq_out[i]);  // Writing to buffer separately for now to expose local packet for debugging
       }
+      
+      // Append zero-magnitude samples to kick squelch in simulation
+      d_iq_out.insert(d_iq_out.end(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
 
       // std::cout << "MOD HERE 1" << std::endl;
       // std::cout << "MOD pkt_len: " << pkt_len << std::endl;
@@ -170,13 +176,15 @@ namespace gr {
       gr_complex *out = (gr_complex *) output_items[0];
       unsigned int noutput_samples = (noutput_items > d_iq_out.size()) ? d_iq_out.size() : noutput_items;
 
+      // std::cout << "MOD Output: " << noutput_samples << " " << d_iq_out.size() << " " << noutput_items  << " " << std::endl;
+
       if (noutput_samples)
       {
         memcpy(out, &d_iq_out[0], noutput_samples*sizeof(gr_complex));
         d_iq_out.erase(d_iq_out.begin(), d_iq_out.begin()+noutput_samples);
       }
 
-      return noutput_items;
+      return noutput_samples;
     }
 
   } /* namespace lora */

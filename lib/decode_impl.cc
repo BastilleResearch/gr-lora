@@ -25,6 +25,8 @@
 #include <gnuradio/io_signature.h>
 #include "decode_impl.h"
 
+#include <bitset>
+
 #define HAMMING_T1_BITMASK 0xAA  // 0b10101010
 #define HAMMING_T2_BITMASK 0x66  // 0b01100110
 #define HAMMING_T4_BITMASK 0x1E  // 0b00011110
@@ -158,6 +160,7 @@ namespace gr {
     {
       unsigned char t1, t2, t4, t8;
       unsigned char mask;
+      unsigned char num_set_bits;
       char error_pos = 0;
 
       for (int i = 0; i < codewords.size(); i++)
@@ -181,6 +184,21 @@ namespace gr {
                         (codewords[i] & 0x08) >> 1 | \
                         (codewords[i] & 0x04) >> 1 | \
                         (codewords[i] & 0x02) >> 1) & 0x0F;
+
+        num_set_bits = 0;
+        for (int bit_idx = 0; bit_idx < 8; bit_idx++)
+        {
+          if (codewords[i] & (0x01 << bit_idx)) num_set_bits++;
+        }
+
+        if (num_set_bits < 3)
+        {
+          codewords[i] = 0;
+        }
+        else if (num_set_bits > 6)
+        {
+          codewords[i] = 255;
+        }
 
         if (i%2 == 1)
         {

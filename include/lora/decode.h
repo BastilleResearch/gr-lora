@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2016 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2016 Bastille Networks.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,15 +29,6 @@
 
 namespace gr {
   namespace lora {
-
-    // enum decode_state_t {
-    //   S_RESET,
-    //   S_DEGRAY,
-    //   S_DEWHITEN,
-    //   S_DEINTERLEAVE,
-    //   S_FEC,
-    //   S_OUT
-    // };
 
     /*!
      * \brief <+description of block+>

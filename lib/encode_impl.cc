@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2016 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2016 Bastille Networks.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,8 +57,6 @@ namespace gr {
       : gr::block("encode",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(0, 0, 0))
-              // gr::io_signature::make(1, 1, sizeof(unsigned char)),
-              // gr::io_signature::make(1, 1, sizeof(unsigned short)))
     {
       d_in_port = pmt::mp("in");
       d_out_port = pmt::mp("out");
@@ -120,7 +118,7 @@ namespace gr {
     {
       for (int i = 0; i < buffer.size(); i++)
       {
-        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";// << std::endl;
+        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";
         std::cout << std::hex << (buffer[i] & 0xFF) << std::endl;
       }
     }
@@ -130,7 +128,7 @@ namespace gr {
     {
       for (int i = 0; i < buffer.size(); i++)
       {
-        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";// << std::endl;
+        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";
         std::cout << std::hex << (buffer[i] & 0xFFFF) << std::endl;
       }
     }
@@ -160,11 +158,6 @@ namespace gr {
         reordered[6] = codewords[6+outer*d_interleaver_size];
         reordered[5] = codewords[7+outer*d_interleaver_size];
 
-        // for (int i = 0; i < 8; i++)
-        // {
-        //   std::cout << std::bitset<8>(block[i]) << std::endl;
-        // }
-
         for (inner = 0; inner < INTERLEAVER_BLOCK_SIZE; inner++)
         {
           word = reordered[inner];
@@ -172,17 +165,12 @@ namespace gr {
           // Rotate
           word = (word >> (inner+1)%ppm) | (word << (ppm-inner-1)%ppm);
           word &= 0xFF;
-          // std::cout << std::bitset<8>(word) << std::endl;
 
           // Reverse endianness
           word = ((word & 128) >> 7) | ((word & 64) >> 5) | ((word & 32) >> 3) | ((word & 16) >> 1) | ((word & 8) << 1) | ((word & 4) << 3) | ((word & 2) << 5) | ((word & 1) << 7);
           word &= 0xFF;
 
-          // std::cout << std::bitset<8>(word) << std::endl;
-
-          // Flip most significant bits
-          // block[(inner+2) % ppm] |= (word & 128) >> 1;
-          // block[(inner+1) % ppm] |= (word & 64) << 1;
+          // Diagonalize the data, flipping the most significant bits
           block[(inner+1) % ppm] |= (word & 128) >> 1;
           block[(inner+2) % ppm] |= (word & 64) << 1; 
           block[(inner+3) % ppm] |= word & 32;
@@ -192,15 +180,6 @@ namespace gr {
           block[(inner+7) % ppm] |= word & 2;
           block[(inner+8) % ppm] |= word & 1;
         }
-
-        // std::cout << "ENCODE " << std::bitset<8>(block[0]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[1]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[2]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[3]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[4]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[5]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[6]) << std::endl;
-        // std::cout << "ENCODE " << std::bitset<8>(block[7]) << std::endl;
 
         symbols.push_back(block[0]);
         symbols.push_back(block[1]);
@@ -238,8 +217,6 @@ namespace gr {
                               (nybbles[i] & 0x02) |
                               (nybbles[i] & 0x01)   ));
 
-        // printf("DATA:     %d\t\t", nybbles[i]);
-        // printf("CODEWORD: %d\n", codewords[i]);
       }
     }
 
@@ -278,7 +255,7 @@ namespace gr {
       size_t pkt_len(0);
       const uint8_t* bytes_in = pmt::u8vector_elements(bytes, pkt_len);
 
-      std::cout << "ENCODE pkt_len: " << pkt_len << std::endl;
+      // std::cout << "ENCODE pkt_len: " << pkt_len << std::endl;
 
       std::vector<unsigned char>  nybbles;
       std::vector<unsigned short> symbols;
@@ -302,93 +279,53 @@ namespace gr {
         nybbles.push_back((bytes_in[i] & 0x0F));
       }
 
-      // std::cout << ""
-      // print_bitwise_u8(nybbles);
-
       hamming_encode(nybbles, codewords);
 
-      std::cout << "Mod FEC Codewords: " << std::endl;
-      print_bitwise_u16(codewords);
+      // std::cout << "Mod FEC Codewords: " << std::endl;
+      // print_bitwise_u16(codewords);
 
       interleave(codewords, symbols);
 
-      std::cout << "Mod Interleaved: " << std::endl;
-      print_bitwise_u16(symbols);
+      // std::cout << "Mod Interleaved: " << std::endl;
+      // print_bitwise_u16(symbols);
 
       whiten(symbols);
 
-      std::cout << "Mod Whiten, Pre-grayed: " << std::endl;
-      print_bitwise_u16(symbols);
+      // std::cout << "Mod Whiten, Pre-grayed: " << std::endl;
+      // print_bitwise_u16(symbols);
 
       from_gray(symbols);
 
-      std::cout << "Mod from_grayed: " << std::endl;
-      print_bitwise_u16(symbols);
+      // std::cout << "Mod from_grayed: " << std::endl;
+      // print_bitwise_u16(symbols);
 
-      std::cout << "Modulated Symbols: " << std::endl;
-      print_bitwise_u16(symbols);
+      // std::cout << "Modulated Symbols: " << std::endl;
+      // print_bitwise_u16(symbols);
 
       pmt::pmt_t output = pmt::init_u16vector(symbols.size(), symbols);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
 
-      std::cout << "ENCODE symbols_size: " << symbols.size() << std::endl;
-      std::cout << "ENCODE msg_pair: " << output << std::endl;
+      // std::cout << "ENCODE symbols_size: " << symbols.size() << std::endl;
+      // std::cout << "ENCODE msg_pair: " << output << std::endl;
 
       message_port_pub(d_out_port, msg_pair);
     }
 
-    void
-    encode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    {
-      // <+forecast+> e.g. ninput_items_required[0] = noutput_items 
-      ninput_items_required[0] = noutput_items;
-    }
+    // void
+    // encode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
+    // {
+    //   // <+forecast+> e.g. ninput_items_required[0] = noutput_items 
+    //   ninput_items_required[0] = noutput_items;
+    // }
 
-    int
-    encode_impl::work (int noutput_items,
-                       gr_vector_int &ninput_items,
-                       gr_vector_const_void_star &input_items,
-                       gr_vector_void_star &output_items)
-    {
-      return noutput_items;
-    }    
+    // int
+    // encode_impl::work (int noutput_items,
+    //                    gr_vector_int &ninput_items,
+    //                    gr_vector_const_void_star &input_items,
+    //                    gr_vector_void_star &output_items)
+    // {
+    //   return noutput_items;
+    // }    
 
   } /* namespace lora */
 } /* namespace gr */
-
-#if 0
-    int
-    encode_impl::work (int noutput_items,
-    // encode_impl::encode (int noutput_items,
-                       gr_vector_int &ninput_items,
-                       gr_vector_const_void_star &input_items,
-                       gr_vector_void_star &output_items)
-    {
-      const unsigned char *in = (const unsigned char *) input_items[0];
-      unsigned short *out = (unsigned short *) output_items[0];
-      unsigned int data_length = ninput_items[0];
-
-      std::vector<unsigned char> nybbles;
-
-      std::cout << "HERE" << std::endl;
-
-      d_codewords.clear();
-
-      // Split 8-bit bytes into nybbles for FEC processing
-      for(int i=0; i < data_length; i++)
-      {
-        nybbles.push_back((in[i] & 0xF0) >> 4);
-        nybbles.push_back((in[i] & 0x0F));
-      }
-
-      hamming_encode(nybbles, d_codewords);
-
-      // Do <+signal processing+>
-      // Tell runtime system how many input items we consumed on
-      // each input stream.
-      consume_each (noutput_items);
-
-      // Tell runtime system how many output items we produced.
-      return noutput_items;
-    }
-#endif

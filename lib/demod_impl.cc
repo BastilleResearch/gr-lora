@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2016 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2016 Bastille Networks.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ namespace gr {
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
-              // gr::io_signature::make(0, 1, sizeof(unsigned short))),
         f_up("up.out", std::ios::out),
         f_down("down.out", std::ios::out)
     {
@@ -100,8 +99,6 @@ namespace gr {
       d_window[d_fft_size-3] = 0.85;
       d_window[d_fft_size-2] = 0.6;
       d_window[d_fft_size-1] = 0.0;
-
-      // memset(d_argmax_history, 0, REQUIRED_PREAMBLE_DEPTH*sizeof(short));
 
       float phase = -M_PI;
       double accumulator = 0;
@@ -218,16 +215,17 @@ namespace gr {
 
       switch (d_state) {
       case S_RESET:
-        d_state = S_PREFILL;
-
         d_overlaps = OVERLAP_DEFAULT;
         d_offset = 0;
         d_symbols.clear();
         d_argmax_history.clear();
         d_sfd_history.clear();
 
-        std::cout << "New state: S_RESET" << std::endl;
-        std::cout << "New state: S_PREFILL" << std::endl;
+        d_state = S_PREFILL;
+
+        #if DEBUG >= DEBUG_INFO
+          std::cout << "Next state: S_PREFILL" << std::endl;
+        #endif
 
         break;
 
@@ -237,10 +235,9 @@ namespace gr {
         if (d_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
         {
           d_state = S_DETECT_PREAMBLE;
-          std::cout << "Ready for preamble..." << std::endl;
 
           #if DEBUG >= DEBUG_INFO
-            std::cout << "New state: S_DETECT_PREAMBLE" << std::endl;
+            std::cout << "Next state: S_DETECT_PREAMBLE" << std::endl;
           #endif
         }
         break;
@@ -268,7 +265,7 @@ namespace gr {
           d_state = S_DETECT_SYNC;   // TODO correct state
 
           #if DEBUG >= DEBUG_INFO
-            std::cout << "New state: S_DETECT_SYNC" << std::endl;
+            std::cout << "Next state: S_DETECT_SYNC" << std::endl;
           #endif
         }
         break;
@@ -287,8 +284,9 @@ namespace gr {
             buffer[j] = in[d_offset+j];
           }
 
-          // printf("ol: %d\t d_overlaps: %d\n", ol, d_overlaps);
-          std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
+          #if DEBUG >= DEBUG_VERBOSE
+            std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
+          #endif
 
           // volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[0], d_fft_size);
           volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[d_offset], d_fft_size);
@@ -320,24 +318,17 @@ namespace gr {
             }
 
             if (sfd_found) {
-              std::cout << "SFD Found!" << std::endl;
               d_state = S_READ_PAYLOAD;
-              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;    // WORKS
+              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;          // WORKS
               // num_consumed = (ol*d_fft_size)/d_overlaps + 6*d_fft_size/4;   // Skip last quarter chirp
-              // num_consumed = d_offset + 6*d_fft_size/4;   // Skip last quarter chirp
-              // std::cout << "KICKED consumed " << (ol*d_fft_size)/d_overlaps << std::endl;
-              std::cout << "KICKED consumed " << std::dec << num_consumed << std::endl;
-              std::cout << "KICKED d_offset " << std::dec << d_offset << std::endl;
-              // d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps) % d_fft_size;
               d_preamble_idx = (d_preamble_idx + num_consumed) % d_fft_size;
-              // d_preamble_idx = (d_preamble_idx + d_offset) % d_fft_size;
 
               // d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;
 
               d_overlaps = OVERLAP_DEFAULT;
 
               #if DEBUG >= DEBUG_INFO
-                std::cout << "New state: S_READ_PAYLOAD" << std::endl;
+                std::cout << "Next state: S_READ_PAYLOAD" << std::endl;
               #endif
 
               break;
@@ -355,7 +346,7 @@ namespace gr {
           d_state = S_OUT;
 
           #if DEBUG >= DEBUG_INFO
-            std::cout << "New state: S_OUT" << std::endl;
+            std::cout << "Next state: S_OUT" << std::endl;
           #endif
         }
 
@@ -372,6 +363,11 @@ namespace gr {
         message_port_pub(d_out_port, msg_pair);
 
         d_state = S_RESET;
+
+        #if DEBUG >= DEBUG_INFO
+          std::cout << "Next state: S_RESET" << std::endl;
+        #endif
+
         break;
       }
 
@@ -381,7 +377,6 @@ namespace gr {
         break;
       }
 
-      // consume_each (d_fft_size/d_overlaps);
       consume_each (num_consumed);
 
       free(up_block);

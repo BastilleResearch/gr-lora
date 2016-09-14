@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2016 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2016 Bastille Networks.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,15 +126,6 @@ namespace gr {
       {
         memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
-        // std::cout << std::bitset<8>(symbols[8*outer+0]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+1]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+2]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+3]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+4]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+5]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+6]) << std::endl;
-        // std::cout << std::bitset<8>(symbols[8*outer+7]) << std::endl;
-
         for (inner = 0; inner < ppm; inner++)
         {
           // Most significant bits are flipped
@@ -146,7 +137,6 @@ namespace gr {
           word &= 0xFF;
 
           // Rotate
-          // std::cout << std::bitset<8>(word) << std::endl;
           word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
           word &= 0xFF;
 
@@ -156,15 +146,6 @@ namespace gr {
 
           block[inner] = word & 0xFF;
         }
-
-        // std::cout << std::bitset<8>(block[0]) << std::endl;
-        // std::cout << std::bitset<8>(block[1]) << std::endl;
-        // std::cout << std::bitset<8>(block[2]) << std::endl;
-        // std::cout << std::bitset<8>(block[3]) << std::endl;
-        // std::cout << std::bitset<8>(block[4]) << std::endl;
-        // std::cout << std::bitset<8>(block[5]) << std::endl;
-        // std::cout << std::bitset<8>(block[6]) << std::endl;
-        // std::cout << std::bitset<8>(block[7]) << std::endl;
 
         codewords.push_back(block[0]);
         codewords.push_back(block[7]);
@@ -194,8 +175,8 @@ namespace gr {
         // codewords[i] =  ((codewords[i] & 128))    | ((codewords[i] & 64))     | ((codewords[i] & 32) >> 5) | ((codewords[i] & 16)) | 
         //                 ((codewords[i] & 8) << 2) | ((codewords[i] & 4) << 1) | ((codewords[i] & 2) << 1)  | ((codewords[i] & 1) << 1);
 
-        printf("\n\nCodeword %d\n", i);
-        std::cout << "Interleave Debug Raw Codeword " << std::bitset<8>(codewords[i]) << std::endl;
+        // printf("\n\nCodeword %d\n", i);
+        // std::cout << "Interleave Debug Raw Codeword " << std::bitset<8>(codewords[i]) << std::endl;
 
         t1 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK);
         t2 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T2_BITMASK);
@@ -209,21 +190,15 @@ namespace gr {
 
         num_set_flags = t1 + t2 + t4;
 
-        printf("Interleave Debug Error Flags t1: %d\t t2: %d\t t3: %d\t t4: %d\t num_set_flags: %d\n", t1, t2, t4, t8, num_set_flags);
-        std::cout << "Interleave Debug error position: " << std::dec << error_pos << std::endl;
+        // printf("Interleave Debug Error Flags t1: %d\t t2: %d\t t3: %d\t t4: %d\t num_set_flags: %d\n", t1, t2, t4, t8, num_set_flags);
+        // std::cout << "Interleave Debug error position: " << std::dec << error_pos << std::endl;
 
         if (error_pos >= 0 && num_set_flags < 3)
         {
           codewords[i] ^= 0x80 >> error_pos;
         } 
 
-        std::cout << "Interleave Debug Bits Corrected " << std::bitset<8>(codewords[i]) << std::endl;
-
-        // codewords[i] = ((codewords[i] & 0x20) >> 2 | \
-        //                 (codewords[i] & 0x08) >> 1 | \
-        //                 (codewords[i] & 0x04) >> 1 | \
-        //                 (codewords[i] & 0x02) >> 1) & 0x0F;
-        // std::cout << "Interleave Debug 2 " << std::bitset<8>(codewords[i]) << std::endl;
+        // std::cout << "Interleave Debug Bits Corrected " << std::bitset<8>(codewords[i]) << std::endl;
 
         num_set_bits = 0;
         for (int bit_idx = 0; bit_idx < 8; bit_idx++)
@@ -234,27 +209,25 @@ namespace gr {
           }
         }
 
-        std::cout << "Interleave Debug # Corrected Set Bits: " << std::dec << num_set_bits << std::endl;
+        // std::cout << "Interleave Debug # Corrected Set Bits: " << std::dec << num_set_bits << std::endl;
 
-        // if (num_set_bits < 3)
         if (num_set_bits < 4)
         {
           codewords[i] = 0;
         }
-        // else if (num_set_bits > 5)
         else if (num_set_bits > 4)
         {
           codewords[i] = 0xFF;
         }
 
-        std::cout << "Interleave Debug Bit Threshold " << std::bitset<8>(codewords[i]) << std::endl;
+        // std::cout << "Interleave Debug Bit Threshold " << std::bitset<8>(codewords[i]) << std::endl;
 
         codewords[i] = (((codewords[i] & 0x20) >> 2) | \
                         ((codewords[i] & 0x08) >> 1) | \
                         ((codewords[i] & 0x04) >> 1) | \
                         ((codewords[i] & 0x02) >> 1)) & 0x0F;
 
-        std::cout << "Interleave Debug Corrected Data " << std::bitset<4>(codewords[i] & 0x0F) << std::endl;
+        // std::cout << "Interleave Debug Corrected Data " << std::bitset<4>(codewords[i] & 0x0F) << std::endl;
 
         if (i%2 == 1)
         {
@@ -294,7 +267,7 @@ namespace gr {
     {
       for (int i = 0; i < buffer.size(); i++)
       {
-        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";// << std::endl;
+        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";
         std::cout << std::hex << (buffer[i] & 0xFF) << std::endl;
       }
     }
@@ -304,7 +277,7 @@ namespace gr {
     {
       for (int i = 0; i < buffer.size(); i++)
       {
-        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";// << std::endl;
+        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";
         std::cout << std::hex << (buffer[i] & 0xFFFF) << std::endl;
       }
     }
@@ -323,103 +296,55 @@ namespace gr {
 
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
 
-      // Lop off preamble, sync word, and SFD -- now properly framed by demod
-      // symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
-
-      std::cout << "Received Symbols: " << std::endl;
-      print_bitwise_u16(symbols_in);
+      // std::cout << "Received Symbols: " << std::endl;
+      // print_bitwise_u16(symbols_in);
 
       to_gray(symbols_in);
 
-      std::cout << "Decode De-grayed: " << std::endl;
-      print_bitwise_u16(symbols_in);
+      // std::cout << "Decode De-grayed: " << std::endl;
+      // print_bitwise_u16(symbols_in);
 
       whiten(symbols_in);
-      // std::cout << "DECODE 1" << std::endl;
 
       // Remove header until whitening sequence is extended
-      // std::cout << "DECODE d_symbols size before: " << symbols_in.size() << std::endl;
-      // d_symbols.erase(symbols_in.begin(), symbols_in.begin()+8);
       if (d_header) symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
-      // std::cout << "DECODE d_symbols size after: " << symbols_in.size() << std::endl;
-      // std::cout << "DECODE 2" << std::endl;
 
-      std::cout << "Decode De-whitened, pre-deinterleave: " << std::endl;
-      print_bitwise_u16(symbols_in);
+      // std::cout << "Decode De-whitened, pre-deinterleave: " << std::endl;
+      // print_bitwise_u16(symbols_in);
 
       deinterleave(symbols_in, codewords);
 
-      std::cout << "Decode De-interleaved: " << std::endl;
-      print_bitwise_u8(codewords);
+      // std::cout << "Decode De-interleaved: " << std::endl;
+      // print_bitwise_u8(codewords);
 
-      // std::cout << "DECODE 3" << std::endl;
       hamming_decode(codewords, bytes);
-      // std::cout << "DECODE 4" << std::endl;
 
-      std::cout << "Decoded Data: " << std::endl;
-      print_bitwise_u8(bytes);
+      // std::cout << "Decoded Data: " << std::endl;
+      // print_bitwise_u8(bytes);
 
       print_payload(bytes);
-      // std::cout << "DECODE 5" << std::endl;
 
       pmt::pmt_t output = pmt::init_u8vector(bytes.size(), bytes);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
       message_port_pub(d_out_port, msg_pair);
     }
 
-    void
-    decode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    {
-       // <+forecast+> e.g. ninput_items_required[0] = noutput_items
-       ninput_items_required[0] = noutput_items; 
-    }
+    // void
+    // decode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
+    // {
+    //    // <+forecast+> e.g. ninput_items_required[0] = noutput_items
+    //    ninput_items_required[0] = noutput_items; 
+    // }
 
-    int
-    decode_impl::general_work (int noutput_items,
-                       gr_vector_int &ninput_items,
-                       gr_vector_const_void_star &input_items,
-                       gr_vector_void_star &output_items)
-    {
-#if 0
-      const unsigned short *in = (const unsigned short *) input_items[0];
-      // unsigned char *out = (unsigned char *) output_items[0];
-      unsigned short symbol = (unsigned short)*in;
-
-      // std::cout << "LORA DECODER SYMBOL " << symbol << std::endl;
-
-      // Do <+signal processing+>
-      // Tell runtime system how many input items we consumed on
-      // each input stream.
-
-      d_symbols.push_back(symbol);
-
-      if (symbol == d_fft_size)        // MAGIC word
-      {
-        to_gray(d_symbols);
-        whiten(d_symbols);
-
-        // Remove header until whitening sequence is extended
-        d_symbols.erase(d_symbols.begin(), d_symbols.begin()+8);
-
-        deinterleave(d_symbols, d_codewords);
-        hamming_decode(d_codewords, d_bytes);
-
-        print_payload(d_bytes);
-
-        d_symbols.clear();
-        d_codewords.clear();
-        d_bytes.clear();
-      }
-      else if (d_symbols.size() > SYMBOL_TIMEOUT_COUNT)
-      {
-        d_symbols.clear();
-      }
-
-      consume_each (noutput_items);
-#endif
-      // Tell runtime system how many output items we produced.
-      return noutput_items;
-    }
+    // int
+    // decode_impl::general_work (int noutput_items,
+    //                    gr_vector_int &ninput_items,
+    //                    gr_vector_const_void_star &input_items,
+    //                    gr_vector_void_star &output_items)
+    // {
+    //   // Tell runtime system how many output items we produced.
+    //   return noutput_items;
+    // }
 
   } /* namespace lora */
 } /* namespace gr */

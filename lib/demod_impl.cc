@@ -39,18 +39,18 @@ namespace gr {
   namespace lora {
 
     demod::sptr
-    demod::make(  int bandwidth,
+    demod::make(  float bandwidth,
                   unsigned short spreading_factor,
                   unsigned short code_rate)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(125000, spreading_factor, code_rate));
+        (new demod_impl(bandwidth, spreading_factor, code_rate));
     }
 
     /*
      * The private constructor
      */
-    demod_impl::demod_impl( int bandwidth,
+    demod_impl::demod_impl( float bandwidth,
                             unsigned short spreading_factor,
                             unsigned short code_rate)
       : gr::block("demod",
@@ -383,7 +383,6 @@ namespace gr {
       free(down_block);
       free(buffer);
 
-      // Tell runtime system how many output items we produced.
       return noutput_items;
     }
 

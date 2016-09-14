@@ -40,7 +40,7 @@ namespace gr {
       pmt::pmt_t d_out_port;
 
       demod_state_t   d_state;
-      int             d_bw;
+      float           d_bw;
       unsigned short  d_sf;
       unsigned short  d_cr;
 
@@ -73,7 +73,7 @@ namespace gr {
       std::ofstream f_up, f_down;
 
      public:
-      demod_impl( int bandwidth,
+      demod_impl( float bandwidth,
                   unsigned short spreading_factor,
                   unsigned short code_rate);
       ~demod_impl();

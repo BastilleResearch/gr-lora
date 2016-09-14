@@ -52,15 +52,12 @@ namespace gr {
       std::ofstream f_mod;
 
      public:
-      mod_impl( int bandwidth,
+      mod_impl( float bandwidth,
                 short spreading_factor,
                 short code_rate);
       ~mod_impl();
 
       void modulate (pmt::pmt_t msg);
-
-      // Where all the action really happens
-      void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 
       int general_work(int noutput_items,
            gr_vector_int &ninput_items,

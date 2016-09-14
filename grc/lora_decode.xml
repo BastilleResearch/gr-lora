@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <block>
-  <name>LoRa Decode</name>
+  <name>LoRa Decoder</name>
   <key>lora_decode</key>
   <category>lora</category>
   <import>import lora</import>

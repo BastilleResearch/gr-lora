@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <block>
-  <name>LoRa Demod</name>
+  <name>LoRa Demodulator</name>
   <key>lora_demod</key>
   <category>lora</category>
   <import>import lora</import>
@@ -10,7 +10,7 @@
     <name>Bandwidth</name>
     <key>bandwidth</key>
     <value>125000</value>
-    <type>int</type>
+    <type>float</type>
   </param>
   <param>
     <name>Spreading Factor</name>

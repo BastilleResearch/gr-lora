@@ -10,7 +10,7 @@
     <name>Bandwidth</name>
     <key>bandwidth</key>
     <value>125000</value>
-    <type>int</type>
+    <type>float</type>
   </param>
   <param>
     <name>Spreading Factor</name>

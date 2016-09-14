@@ -30,7 +30,7 @@ namespace gr {
   namespace lora {
 
     mod::sptr
-    mod::make(  int bandwidth,
+    mod::make(  float bandwidth,
                 short spreading_factor,
                 short code_rate)
     {
@@ -41,7 +41,7 @@ namespace gr {
     /*
      * The private constructor
      */
-    mod_impl::mod_impl( int bandwidth,
+    mod_impl::mod_impl( float bandwidth,
                         short spreading_factor,
                         short code_rate)
       : gr::block("mod",
@@ -119,6 +119,7 @@ namespace gr {
       {
         for (int j = 0; j < d_fft_size; j++)
         {
+          // iq_out.push_back(d_upchirp[(symbols_in[i] + j) % d_fft_size]);
           iq_out.push_back(d_upchirp[(symbols_in[i] + 63 + j) % d_fft_size]);
         }
       }
@@ -140,12 +141,6 @@ namespace gr {
       f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
     }
 
-    void
-    mod_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    {
-      /* <+forecast+> e.g. ninput_items_required[0] = noutput_items */
-    }
-
     int
     mod_impl::general_work (int noutput_items,
                        gr_vector_int &ninput_items,
@@ -154,8 +149,6 @@ namespace gr {
     {
       gr_complex *out = (gr_complex *) output_items[0];
       unsigned int noutput_samples = (noutput_items > d_iq_out.size()) ? d_iq_out.size() : noutput_items;
-
-      // std::cout << "MOD Output: " << noutput_samples << " " << d_iq_out.size() << " " << noutput_items  << " " << std::endl;
 
       if (noutput_samples)
       {

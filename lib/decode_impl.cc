@@ -307,7 +307,13 @@ namespace gr {
       whiten(symbols_in);
 
       // Remove header until whitening sequence is extended
-      if (d_header) symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+      if (d_header)
+      {
+        if (symbols_in.size() > 8)
+        {
+          symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
+        }
+      }
 
       // std::cout << "Decode De-whitened, pre-deinterleave: " << std::endl;
       // print_bitwise_u16(symbols_in);
@@ -328,24 +334,7 @@ namespace gr {
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
       message_port_pub(d_out_port, msg_pair);
     }
-
-    // void
-    // decode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    // {
-    //    // <+forecast+> e.g. ninput_items_required[0] = noutput_items
-    //    ninput_items_required[0] = noutput_items; 
-    // }
-
-    // int
-    // decode_impl::general_work (int noutput_items,
-    //                    gr_vector_int &ninput_items,
-    //                    gr_vector_const_void_star &input_items,
-    //                    gr_vector_void_star &output_items)
-    // {
-    //   // Tell runtime system how many output items we produced.
-    //   return noutput_items;
-    // }
-
+    
   } /* namespace lora */
 } /* namespace gr */
 

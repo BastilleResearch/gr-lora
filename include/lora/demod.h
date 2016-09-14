@@ -63,7 +63,7 @@ namespace gr {
        * class. lora::demod::make is the public interface for
        * creating new instances.
        */
-      static sptr make( int bandwidth,
+      static sptr make( float bandwidth,
                         unsigned short spreading_factor,
                         unsigned short code_rate);
     };

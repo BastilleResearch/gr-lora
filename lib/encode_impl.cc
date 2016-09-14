@@ -249,7 +249,6 @@ namespace gr {
     void
     encode_impl::encode (pmt::pmt_t msg)
     {
-      // pmt::pmt_t meta(pmt::car(msg));
       pmt::pmt_t bytes(pmt::cdr(msg));
 
       size_t pkt_len(0);
@@ -310,22 +309,6 @@ namespace gr {
 
       message_port_pub(d_out_port, msg_pair);
     }
-
-    // void
-    // encode_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    // {
-    //   // <+forecast+> e.g. ninput_items_required[0] = noutput_items 
-    //   ninput_items_required[0] = noutput_items;
-    // }
-
-    // int
-    // encode_impl::work (int noutput_items,
-    //                    gr_vector_int &ninput_items,
-    //                    gr_vector_const_void_star &input_items,
-    //                    gr_vector_void_star &output_items)
-    // {
-    //   return noutput_items;
-    // }    
 
   } /* namespace lora */
 } /* namespace gr */

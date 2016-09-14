@@ -61,7 +61,7 @@ namespace gr {
       float phase = -M_PI;
       double accumulator = 0;
 
-      for (int i = 0; i < d_fft_size; i++)
+      for (int i = 0; i < 2*d_fft_size; i++)
       {
         accumulator += phase;
         d_downchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
@@ -90,26 +90,11 @@ namespace gr {
 
       std::vector<gr_complex> iq_out;
 
-      // std::cout << "MOD HERE 0" << std::endl;
-      // std::cout << "MOD pkt_len: " << pkt_len << std::endl;
-      // std::cout << "MOD len_chirp_table: " << d_upchirp.size() << std::endl;
-      // std::cout << "MOD d_fft_size: " << d_fft_size << std::endl;
-
-      // Prepend zero-magnitude samples to kick squelch in simulation
-      d_iq_out.insert(d_iq_out.begin(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
-
-      for (int i = 0; i < pkt_len; i++)
-      {
-        std::cout << "MOD INPUT: " << i << "\t\t" << symbols_in[i] << std::endl;
-      } 
-
       // Preamble
       for (int i = 0; i < NUM_PREAMBLE_CHIRPS*d_fft_size; i++)
       {
         iq_out.push_back(d_upchirp[(i) % d_fft_size]);
       }
-
-      std::cout << "MOD 0.0" << std::endl;
 
       // Sync Word 0
       for (int i = 0; i < d_fft_size; i++)
@@ -117,15 +102,11 @@ namespace gr {
         iq_out.push_back(d_upchirp[(LORA_SYNCWORD0 + i) % d_fft_size]);
       }
 
-      std::cout << "MOD 0.1" << std::endl;
-
       // Sync Word 1
       for (int i = 0; i < d_fft_size; i++)
       {
         iq_out.push_back(d_upchirp[(LORA_SYNCWORD1 + i) % d_fft_size]);
       }
-
-      std::cout << "MOD 0.2" << std::endl;
 
       // SFD Downchirps
       for (int i = 0; i < (2*d_fft_size+d_fft_size/4); i++)
@@ -133,16 +114,17 @@ namespace gr {
         iq_out.push_back(d_downchirp[(LORA_SYNCWORD1 + i) % d_fft_size]);   // Downchirps start where sync word ends
       }
 
-      std::cout << "MOD 0.3" << std::endl;
-
       // Payload
       for (int i = 0; i < pkt_len; i++)
       {
         for (int j = 0; j < d_fft_size; j++)
         {
-          iq_out.push_back(d_upchirp[(symbols_in[i] + j) % d_fft_size]);
+          iq_out.push_back(d_upchirp[(symbols_in[i] + 63 + j) % d_fft_size]);
         }
       }
+
+      // Prepend zero-magnitude samples to kick squelch in simulation
+      d_iq_out.insert(d_iq_out.begin(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
 
       // Append samples to IQ output buffer
       for (int i = 0; i < iq_out.size(); i++)
@@ -153,12 +135,8 @@ namespace gr {
       // Append zero-magnitude samples to kick squelch in simulation
       d_iq_out.insert(d_iq_out.end(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
 
-      // std::cout << "MOD HERE 1" << std::endl;
-      // std::cout << "MOD pkt_len: " << pkt_len << std::endl;
-      // std::cout << "MOD iq_out.size(): " << iq_out.size() << std::endl;
-      // std::cout << "MOD num bytes required: " << iq_out.size()*sizeof(gr_complex) << std::endl;
-
       // f_mod.write((const char *)&iq_out[0], iq_out.size()*sizeof(gr_complex));
+      f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
     }
 
     void

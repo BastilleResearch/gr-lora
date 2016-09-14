@@ -24,6 +24,7 @@
 
 #include <gnuradio/io_signature.h>
 #include "decode_impl.h"
+#include "stdio.h"
 
 #include <bitset>
 
@@ -125,14 +126,14 @@ namespace gr {
       {
         memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
-        std::cout << std::bitset<8>(symbols[8*outer+0]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+1]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+2]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+3]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+4]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+5]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+6]) << std::endl;
-        std::cout << std::bitset<8>(symbols[8*outer+7]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+0]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+1]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+2]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+3]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+4]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+5]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+6]) << std::endl;
+        // std::cout << std::bitset<8>(symbols[8*outer+7]) << std::endl;
 
         for (inner = 0; inner < ppm; inner++)
         {
@@ -145,7 +146,7 @@ namespace gr {
           word &= 0xFF;
 
           // Rotate
-          std::cout << std::bitset<8>(word) << std::endl;
+          // std::cout << std::bitset<8>(word) << std::endl;
           word = (word << (inner+1)%ppm) | (word >> (ppm-inner-1)%ppm);
           word &= 0xFF;
 
@@ -182,11 +183,20 @@ namespace gr {
     {
       unsigned char t1, t2, t4, t8;
       unsigned char mask;
-      unsigned char num_set_bits;
-      char error_pos = 0;
+      unsigned int num_set_bits;
+      unsigned int num_set_flags;
+      int error_pos = 0;
 
       for (int i = 0; i < codewords.size(); i++)
       {
+        // Reorder into hamming format. Hamming parity bits p3 and p4 are flipped OTA, so format to be corrected is p1,p2,p4,p3,d1,d2,d3,d4
+        // Final bit order is p1,p2,d1,p3,d2,d3,d4,p4
+        // codewords[i] =  ((codewords[i] & 128))    | ((codewords[i] & 64))     | ((codewords[i] & 32) >> 5) | ((codewords[i] & 16)) | 
+        //                 ((codewords[i] & 8) << 2) | ((codewords[i] & 4) << 1) | ((codewords[i] & 2) << 1)  | ((codewords[i] & 1) << 1);
+
+        printf("\n\nCodeword %d\n", i);
+        std::cout << "Interleave Debug Raw Codeword " << std::bitset<8>(codewords[i]) << std::endl;
+
         t1 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK);
         t2 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T2_BITMASK);
         t4 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T4_BITMASK);
@@ -197,30 +207,54 @@ namespace gr {
         if (t2 != 0) error_pos += 2;
         if (t4 != 0) error_pos += 4;
 
-        if (error_pos >= 0)
+        num_set_flags = t1 + t2 + t4;
+
+        printf("Interleave Debug Error Flags t1: %d\t t2: %d\t t3: %d\t t4: %d\t num_set_flags: %d\n", t1, t2, t4, t8, num_set_flags);
+        std::cout << "Interleave Debug error position: " << std::dec << error_pos << std::endl;
+
+        if (error_pos >= 0 && num_set_flags < 3)
         {
           codewords[i] ^= 0x80 >> error_pos;
-        }
+        } 
 
-        codewords[i] = ((codewords[i] & 0x20) >> 2 | \
-                        (codewords[i] & 0x08) >> 1 | \
-                        (codewords[i] & 0x04) >> 1 | \
-                        (codewords[i] & 0x02) >> 1) & 0x0F;
+        std::cout << "Interleave Debug Bits Corrected " << std::bitset<8>(codewords[i]) << std::endl;
+
+        // codewords[i] = ((codewords[i] & 0x20) >> 2 | \
+        //                 (codewords[i] & 0x08) >> 1 | \
+        //                 (codewords[i] & 0x04) >> 1 | \
+        //                 (codewords[i] & 0x02) >> 1) & 0x0F;
+        // std::cout << "Interleave Debug 2 " << std::bitset<8>(codewords[i]) << std::endl;
 
         num_set_bits = 0;
         for (int bit_idx = 0; bit_idx < 8; bit_idx++)
         {
-          if (codewords[i] & (0x01 << bit_idx)) num_set_bits++;
+          if (codewords[i] & (0x01 << bit_idx))
+          {
+            num_set_bits++;
+          }
         }
 
-        if (num_set_bits < 3)
+        std::cout << "Interleave Debug # Corrected Set Bits: " << std::dec << num_set_bits << std::endl;
+
+        // if (num_set_bits < 3)
+        if (num_set_bits < 4)
         {
           codewords[i] = 0;
         }
-        else if (num_set_bits > 6)
+        // else if (num_set_bits > 5)
+        else if (num_set_bits > 4)
         {
-          codewords[i] = 255;
+          codewords[i] = 0xFF;
         }
+
+        std::cout << "Interleave Debug Bit Threshold " << std::bitset<8>(codewords[i]) << std::endl;
+
+        codewords[i] = (((codewords[i] & 0x20) >> 2) | \
+                        ((codewords[i] & 0x08) >> 1) | \
+                        ((codewords[i] & 0x04) >> 1) | \
+                        ((codewords[i] & 0x02) >> 1)) & 0x0F;
+
+        std::cout << "Interleave Debug Corrected Data " << std::bitset<4>(codewords[i] & 0x0F) << std::endl;
 
         if (i%2 == 1)
         {
@@ -256,6 +290,26 @@ namespace gr {
     }
 
     void
+    decode_impl::print_bitwise_u8(std::vector<unsigned char> &buffer)
+    {
+      for (int i = 0; i < buffer.size(); i++)
+      {
+        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";// << std::endl;
+        std::cout << std::hex << (buffer[i] & 0xFF) << std::endl;
+      }
+    }
+
+    void
+    decode_impl::print_bitwise_u16(std::vector<unsigned short> &buffer)
+    {
+      for (int i = 0; i < buffer.size(); i++)
+      {
+        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";// << std::endl;
+        std::cout << std::hex << (buffer[i] & 0xFFFF) << std::endl;
+      }
+    }
+
+    void
     decode_impl::decode(pmt::pmt_t msg)
     {
       pmt::pmt_t symbols(pmt::cdr(msg));
@@ -267,15 +321,19 @@ namespace gr {
       std::vector<unsigned char> codewords;
       std::vector<unsigned char> bytes;
 
-      std::cout << "DEMOD Header: " << d_header << std::endl;
-
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
 
       // Lop off preamble, sync word, and SFD -- now properly framed by demod
       // symbols_in.erase(symbols_in.begin(), symbols_in.begin()+8);
 
+      std::cout << "Received Symbols: " << std::endl;
+      print_bitwise_u16(symbols_in);
+
       to_gray(symbols_in);
-      // std::cout << "DECODE 0" << std::endl;
+
+      std::cout << "Decode De-grayed: " << std::endl;
+      print_bitwise_u16(symbols_in);
+
       whiten(symbols_in);
       // std::cout << "DECODE 1" << std::endl;
 
@@ -286,10 +344,20 @@ namespace gr {
       // std::cout << "DECODE d_symbols size after: " << symbols_in.size() << std::endl;
       // std::cout << "DECODE 2" << std::endl;
 
+      std::cout << "Decode De-whitened, pre-deinterleave: " << std::endl;
+      print_bitwise_u16(symbols_in);
+
       deinterleave(symbols_in, codewords);
+
+      std::cout << "Decode De-interleaved: " << std::endl;
+      print_bitwise_u8(codewords);
+
       // std::cout << "DECODE 3" << std::endl;
       hamming_decode(codewords, bytes);
       // std::cout << "DECODE 4" << std::endl;
+
+      std::cout << "Decoded Data: " << std::endl;
+      print_bitwise_u8(bytes);
 
       print_payload(bytes);
       // std::cout << "DECODE 5" << std::endl;

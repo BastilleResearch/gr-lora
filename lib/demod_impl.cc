@@ -29,10 +29,11 @@
 #define DEBUG_INFO    1
 #define DEBUG_VERBOSE 2
 #define DEBUG_ULTRA   3
-#define DEBUG         DEBUG_INFO
+#define DEBUG         DEBUG_OFF
 
 #define OVERLAP_DEFAULT 1
-#define OVERLAP_FACTOR  8
+// #define OVERLAP_FACTOR  8
+#define OVERLAP_FACTOR  16
 
 namespace gr {
   namespace lora {
@@ -71,6 +72,7 @@ namespace gr {
       d_fft_size = (1 << spreading_factor);
       d_fft = new fft::fft_complex(d_fft_size, true, 1);
       d_overlaps = OVERLAP_DEFAULT;
+      d_offset = 0;
 
       d_power     = .000000001;     // MAGIC
       d_threshold = 0.0005;         // MAGIC
@@ -78,19 +80,30 @@ namespace gr {
       for (int i = 0; i < d_fft_size; i++) {
         d_window.push_back(1.0);
       }
+      // d_window[0]            = 0.0;
+      // d_window[1]            = 0.68;
+      // d_window[2]            = 0.95;
+      // d_window[3]            = 0.98;
+      // d_window[d_fft_size-4] = 0.98;
+      // d_window[d_fft_size-3] = 0.95;
+      // d_window[d_fft_size-2] = 0.68;
+      // d_window[d_fft_size-1] = 0.0;
       d_window[0]            = 0.0;
-      d_window[1]            = 0.68;
-      d_window[2]            = 0.95;
-      d_window[3]            = 0.98;
-      d_window[d_fft_size-4] = 0.98;
-      d_window[d_fft_size-3] = 0.95;
-      d_window[d_fft_size-2] = 0.68;
+      d_window[1]            = 0.6;
+      d_window[2]            = 0.85;
+      d_window[3]            = 0.93;
+      d_window[4]            = 0.98;
+      d_window[5]            = 0.99;
+      d_window[d_fft_size-6] = 0.99;
+      d_window[d_fft_size-5] = 0.98;
+      d_window[d_fft_size-4] = 0.93;
+      d_window[d_fft_size-3] = 0.85;
+      d_window[d_fft_size-2] = 0.6;
       d_window[d_fft_size-1] = 0.0;
 
       // memset(d_argmax_history, 0, REQUIRED_PREAMBLE_DEPTH*sizeof(short));
 
       float phase = -M_PI;
-      // float phase = 0;
       double accumulator = 0;
 
       for (int i = 0; i < 2*d_fft_size; i++) {
@@ -168,7 +181,7 @@ namespace gr {
       bool preamble_found = false;
       bool sfd_found      = false;
       gr_complex *up_block   = (gr_complex *)malloc(2*d_fft_size*sizeof(gr_complex));
-      gr_complex *down_block = (gr_complex *)malloc(  d_fft_size*sizeof(gr_complex));
+      gr_complex *down_block = (gr_complex *)malloc(2*d_fft_size*sizeof(gr_complex));
 
       if (up_block == NULL || down_block == NULL)
       {
@@ -178,6 +191,10 @@ namespace gr {
       // Dechirp the incoming signal
       volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], 2*d_fft_size);
       volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
+      // volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[d_offset], d_fft_size);
+
+      // Windowing
+      // volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_fft_size);
 
       if (d_state == S_READ_PAYLOAD)
       {
@@ -270,11 +287,14 @@ namespace gr {
             buffer[j] = in[d_offset+j];
           }
 
+          // printf("ol: %d\t d_overlaps: %d\n", ol, d_overlaps);
+          std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
+
           // volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[0], d_fft_size);
           volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[d_offset], d_fft_size);
 
           // std::cout << "FFT WINDOW START " << offset << std::endl;
-          memset(d_fft->get_inbuf(),      0, d_fft_size*sizeof(gr_complex));
+          memset(d_fft->get_inbuf(),        0, d_fft_size*sizeof(gr_complex));
           memcpy(d_fft->get_inbuf(), up_block, d_fft_size*sizeof(gr_complex));
           d_fft->execute();
 
@@ -300,12 +320,20 @@ namespace gr {
             }
 
             if (sfd_found) {
+              std::cout << "SFD Found!" << std::endl;
               d_state = S_READ_PAYLOAD;
-              // num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;
-              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size + d_fft_size/4;
+              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;    // WORKS
+              // num_consumed = (ol*d_fft_size)/d_overlaps + 6*d_fft_size/4;   // Skip last quarter chirp
+              // num_consumed = d_offset + 6*d_fft_size/4;   // Skip last quarter chirp
               // std::cout << "KICKED consumed " << (ol*d_fft_size)/d_overlaps << std::endl;
-              d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps + d_fft_size/4) % d_fft_size;
+              std::cout << "KICKED consumed " << std::dec << num_consumed << std::endl;
+              std::cout << "KICKED d_offset " << std::dec << d_offset << std::endl;
               // d_preamble_idx = (d_preamble_idx + (ol*d_fft_size)/d_overlaps) % d_fft_size;
+              d_preamble_idx = (d_preamble_idx + num_consumed) % d_fft_size;
+              // d_preamble_idx = (d_preamble_idx + d_offset) % d_fft_size;
+
+              // d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;
+
               d_overlaps = OVERLAP_DEFAULT;
 
               #if DEBUG >= DEBUG_INFO

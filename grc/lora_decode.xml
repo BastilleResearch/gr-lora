@@ -21,7 +21,7 @@
   <param>
     <name>Header</name>
     <key>header</key>
-    <value>false</value>
+    <value>False</value>
     <type>bool</type>
   </param>
 

@@ -61,6 +61,9 @@ namespace gr {
       unsigned char parity(unsigned char c, unsigned char bitmask);
       void print_payload(std::vector<unsigned char> &payload);
 
+      void print_bitwise_u8 (std::vector<unsigned char>  &buffer);
+      void print_bitwise_u16(std::vector<unsigned short> &buffer);
+
       void decode(pmt::pmt_t msg);
 
       // Where all the action really happens

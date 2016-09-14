@@ -116,15 +116,22 @@ namespace gr {
     }
 
     void
-    encode_impl::il_block_print(unsigned char *block)
+    encode_impl::print_bitwise_u8(std::vector<unsigned char> &buffer)
     {
-      for (int i = 0; i < INTERLEAVER_BLOCK_SIZE; i++)
+      for (int i = 0; i < buffer.size(); i++)
       {
-        for (int j = INTERLEAVER_BLOCK_SIZE-1; j >=0 ; j--)
-        {
-          printf("%d ", (block[i] & (0x01 << j)) ? 1 : 0);
-        }
-        printf("\n");
+        std::cout << i << "\t" << std::bitset<8>(buffer[i] & 0xFF) << "\t";// << std::endl;
+        std::cout << std::hex << (buffer[i] & 0xFF) << std::endl;
+      }
+    }
+
+    void
+    encode_impl::print_bitwise_u16(std::vector<unsigned short> &buffer)
+    {
+      for (int i = 0; i < buffer.size(); i++)
+      {
+        std::cout << i << "\t" << std::bitset<16>(buffer[i] & 0xFFFF) << "\t";// << std::endl;
+        std::cout << std::hex << (buffer[i] & 0xFFFF) << std::endl;
       }
     }
 
@@ -144,14 +151,14 @@ namespace gr {
       {
         memset(block, 0, d_interleaver_size*sizeof(unsigned char));
 
-        reordered[0] = codewords[0];
-        reordered[7] = codewords[1];
-        reordered[2] = codewords[2];
-        reordered[1] = codewords[3];
-        reordered[4] = codewords[4];
-        reordered[3] = codewords[5];
-        reordered[6] = codewords[6];
-        reordered[5] = codewords[7];
+        reordered[0] = codewords[0+outer*d_interleaver_size];
+        reordered[7] = codewords[1+outer*d_interleaver_size];
+        reordered[2] = codewords[2+outer*d_interleaver_size];
+        reordered[1] = codewords[3+outer*d_interleaver_size];
+        reordered[4] = codewords[4+outer*d_interleaver_size];
+        reordered[3] = codewords[5+outer*d_interleaver_size];
+        reordered[6] = codewords[6+outer*d_interleaver_size];
+        reordered[5] = codewords[7+outer*d_interleaver_size];
 
         // for (int i = 0; i < 8; i++)
         // {
@@ -177,7 +184,7 @@ namespace gr {
           // block[(inner+2) % ppm] |= (word & 128) >> 1;
           // block[(inner+1) % ppm] |= (word & 64) << 1;
           block[(inner+1) % ppm] |= (word & 128) >> 1;
-          block[(inner+2) % ppm] |= (word & 64) << 1;
+          block[(inner+2) % ppm] |= (word & 64) << 1; 
           block[(inner+3) % ppm] |= word & 32;
           block[(inner+4) % ppm] |= word & 16;
           block[(inner+5) % ppm] |= word & 8;
@@ -186,14 +193,14 @@ namespace gr {
           block[(inner+8) % ppm] |= word & 1;
         }
 
-        std::cout << "ENCODE " << std::bitset<8>(block[0]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[1]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[2]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[3]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[4]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[5]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[6]) << std::endl;
-        std::cout << "ENCODE " << std::bitset<8>(block[7]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[0]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[1]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[2]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[3]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[4]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[5]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[6]) << std::endl;
+        // std::cout << "ENCODE " << std::bitset<8>(block[7]) << std::endl;
 
         symbols.push_back(block[0]);
         symbols.push_back(block[1]);
@@ -231,8 +238,8 @@ namespace gr {
                               (nybbles[i] & 0x02) |
                               (nybbles[i] & 0x01)   ));
 
-        printf("DATA:     %d\t\t", nybbles[i]);
-        printf("CODEWORD: %d\n", codewords[i]);
+        // printf("DATA:     %d\t\t", nybbles[i]);
+        // printf("CODEWORD: %d\n", codewords[i]);
       }
     }
 
@@ -273,20 +280,20 @@ namespace gr {
 
       std::cout << "ENCODE pkt_len: " << pkt_len << std::endl;
 
-      std::vector<unsigned char> nybbles;
+      std::vector<unsigned char>  nybbles;
       std::vector<unsigned short> symbols;
       std::vector<unsigned short> codewords;
 
       if (d_header)
       {
-        nybbles.push_back(0x3);
-        nybbles.push_back(0x7);
-        nybbles.push_back(0x3);
-        nybbles.push_back(0x7);
-        nybbles.push_back(0x3);
-        nybbles.push_back(0x7);
-        nybbles.push_back(0x3);
-        nybbles.push_back(0x7);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
+        nybbles.push_back(0xF);
       }
 
       for (int i = 0; i < pkt_len; i++)
@@ -295,15 +302,36 @@ namespace gr {
         nybbles.push_back((bytes_in[i] & 0x0F));
       }
 
+      // std::cout << ""
+      // print_bitwise_u8(nybbles);
+
       hamming_encode(nybbles, codewords);
+
+      std::cout << "Mod FEC Codewords: " << std::endl;
+      print_bitwise_u16(codewords);
+
       interleave(codewords, symbols);
+
+      std::cout << "Mod Interleaved: " << std::endl;
+      print_bitwise_u16(symbols);
+
       whiten(symbols);
+
+      std::cout << "Mod Whiten, Pre-grayed: " << std::endl;
+      print_bitwise_u16(symbols);
+
       from_gray(symbols);
+
+      std::cout << "Mod from_grayed: " << std::endl;
+      print_bitwise_u16(symbols);
+
+      std::cout << "Modulated Symbols: " << std::endl;
+      print_bitwise_u16(symbols);
 
       pmt::pmt_t output = pmt::init_u16vector(symbols.size(), symbols);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
 
-      std::cout << "ENCODE symbols_size" << symbols.size() << std::endl;
+      std::cout << "ENCODE symbols_size: " << symbols.size() << std::endl;
       std::cout << "ENCODE msg_pair: " << output << std::endl;
 
       message_port_pub(d_out_port, msg_pair);

@@ -60,6 +60,7 @@ namespace gr {
 
       fft::fft_complex   *d_fft;
       std::vector<float> d_window;
+      float              d_beta;
 
       std::vector<gr_complex> d_dup;
       std::vector<gr_complex> d_ddown;
@@ -76,7 +77,8 @@ namespace gr {
      public:
       demod_impl( float bandwidth,
                   unsigned short spreading_factor,
-                  unsigned short code_rate);
+                  unsigned short code_rate,
+                  float beta);
       ~demod_impl();
 
       unsigned short argmax(gr_complex *fft_result, bool update_squelch);

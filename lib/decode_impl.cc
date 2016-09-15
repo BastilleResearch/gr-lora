@@ -173,7 +173,6 @@ namespace gr {
         // codewords[i] =  ((codewords[i] & 128))    | ((codewords[i] & 64))     | ((codewords[i] & 32) >> 5) | ((codewords[i] & 16)) | 
         //                 ((codewords[i] & 8) << 2) | ((codewords[i] & 4) << 1) | ((codewords[i] & 2) << 1)  | ((codewords[i] & 1) << 1);
 
-        // printf("\n\nCodeword %d\n", i);
         // std::cout << "Interleave Debug Raw Codeword " << std::bitset<8>(codewords[i]) << std::endl;
 
         t1 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK);
@@ -188,7 +187,6 @@ namespace gr {
 
         num_set_flags = t1 + t2 + t4;
 
-        // printf("Interleave Debug Error Flags t1: %d\t t2: %d\t t3: %d\t t4: %d\t num_set_flags: %d\n", t1, t2, t4, t8, num_set_flags);
         // std::cout << "Interleave Debug error position: " << std::dec << error_pos << std::endl;
 
         if (error_pos >= 0 && num_set_flags < 3)

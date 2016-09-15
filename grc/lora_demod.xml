@@ -4,7 +4,7 @@
   <key>lora_demod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.demod($bandwidth, $spreading_factor, $code_rate)</make>
+  <make>lora.demod($bandwidth, $spreading_factor, $code_rate, $beta)</make>
 
   <param>
     <name>Bandwidth</name>
@@ -23,6 +23,12 @@
     <key>code_rate</key>
     <value>4</value>
     <type>int</type>
+  </param>
+  <param>
+    <name>FFT Window Beta</name>
+    <key>beta</key>
+    <value>6.76</value>
+    <type>float</type>
   </param>
 
   <sink>

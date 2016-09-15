@@ -40,10 +40,11 @@ namespace gr {
     demod::sptr
     demod::make(  float bandwidth,
                   unsigned short spreading_factor,
-                  unsigned short code_rate)
+                  unsigned short code_rate,
+                  float beta)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(bandwidth, spreading_factor, code_rate));
+        (new demod_impl(bandwidth, spreading_factor, code_rate, beta));
     }
 
     /*
@@ -51,7 +52,8 @@ namespace gr {
      */
     demod_impl::demod_impl( float bandwidth,
                             unsigned short spreading_factor,
-                            unsigned short code_rate)
+                            unsigned short code_rate,
+                            float beta)
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
@@ -66,38 +68,23 @@ namespace gr {
       d_bw    = bandwidth;
       d_sf    = spreading_factor;
       d_cr    = code_rate;
+      d_beta  = beta;
 
       d_fft_size = (1 << spreading_factor);
       d_fft = new fft::fft_complex(d_fft_size, true, 1);
       d_overlaps = OVERLAP_DEFAULT;
       d_offset = 0;
 
+      d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_fft_size, d_beta);
+
       d_power     = .000000001;     // MAGIC
       d_threshold = 0.0005;         // MAGIC
 
-      for (int i = 0; i < d_fft_size; i++) {
-        d_window.push_back(1.0);
+      std::cout << d_beta << std::endl;
+      for (int i = 0; i < d_window.size(); i++)
+      {
+        std::cout << d_window[i] << std::endl;
       }
-      // d_window[0]            = 0.0;
-      // d_window[1]            = 0.68;
-      // d_window[2]            = 0.95;
-      // d_window[3]            = 0.98;
-      // d_window[d_fft_size-4] = 0.98;
-      // d_window[d_fft_size-3] = 0.95;
-      // d_window[d_fft_size-2] = 0.68;
-      // d_window[d_fft_size-1] = 0.0;
-      d_window[0]            = 0.0;
-      d_window[1]            = 0.6;
-      d_window[2]            = 0.85;
-      d_window[3]            = 0.93;
-      d_window[4]            = 0.98;
-      d_window[5]            = 0.99;
-      d_window[d_fft_size-6] = 0.99;
-      d_window[d_fft_size-5] = 0.98;
-      d_window[d_fft_size-4] = 0.93;
-      d_window[d_fft_size-3] = 0.85;
-      d_window[d_fft_size-2] = 0.6;
-      d_window[d_fft_size-1] = 0.0;
 
       float phase = -M_PI;
       double accumulator = 0;
@@ -192,7 +179,7 @@ namespace gr {
       volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_fft_size);
 
       // Windowing
-      // volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
+      volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
 
       if (d_state == S_READ_PAYLOAD)
       {

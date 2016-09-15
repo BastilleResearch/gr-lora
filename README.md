@@ -41,6 +41,7 @@ Example flowgraphs are provided in the examples/ directory.  Socket PDUs are use
 - Improve whitening sequence accuracy: The whitening sequence implemented was derived experimentally by @matt-knight during the blind analysis process that revealed the protocol.  It was iterated on a few times for accuracy but is still full of errors :)  Additionally, the first 8 symbols of the whitening sequence are not correct.  This is due to a hardware limitation: the device that was examined by @matt-knight is not capable of disabling the optional PHY header, thus the portion of the whitening sequence that is applied to it has not yet been reversed.
 - PHY header support: The PHY header is currently not supported due to the aforementioned whitening sequence limitation.
 - PHY CRC support: Ditto for the PHY CRC(s).
+- Additional demodulation strategies: iterating on existing strategy (oversampling, using oversized FFTs, etc.) and trying other methods for detection and sync.
 - Clock recovery (if necessary): Currently no clock recovery is performed beyond the initial synchonization.  Clock recovery may be desirable if clock drift presents itself as an issue, such as when sending long messages or using high spreading factors which have longer transmit times.
 - Implement upper layers (LoRaWAN): For further integration and experimentation.
 

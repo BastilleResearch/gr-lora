@@ -23,10 +23,8 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include "decode_impl.h"
-#include "stdio.h"
-
 #include <bitset>
+#include "decode_impl.h"
 
 #define HAMMING_T1_BITMASK 0xAA  // 0b10101010
 #define HAMMING_T2_BITMASK 0x66  // 0b01100110
@@ -334,7 +332,7 @@ namespace gr {
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
       message_port_pub(d_out_port, msg_pair);
     }
-    
+
   } /* namespace lora */
 } /* namespace gr */
 

@@ -102,6 +102,7 @@ namespace gr {
       float phase = -M_PI;
       double accumulator = 0;
 
+      // Create local chirp tables.  Each table is 2 chirps long to allow memcpying from arbitrary offsets.
       for (int i = 0; i < 2*d_fft_size; i++) {
         accumulator += phase;
         d_downchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
@@ -171,13 +172,14 @@ namespace gr {
       unsigned short  *out = (unsigned short   *) output_items[0];
       unsigned short num_consumed = d_fft_size;
 
-      gr_complex *buffer = (gr_complex *)malloc(d_fft_size*sizeof(gr_complex));
+      // gr_complex *buffer = (gr_complex *)malloc(d_fft_size*sizeof(gr_complex));
+      gr_complex *buffer = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
 
       unsigned short max_index = 0;
       bool preamble_found = false;
       bool sfd_found      = false;
-      gr_complex *up_block   = (gr_complex *)malloc(2*d_fft_size*sizeof(gr_complex));
-      gr_complex *down_block = (gr_complex *)malloc(2*d_fft_size*sizeof(gr_complex));
+      gr_complex *up_block   = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
+      gr_complex *down_block = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
 
       if (up_block == NULL || down_block == NULL)
       {
@@ -185,7 +187,7 @@ namespace gr {
       }
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], 2*d_fft_size);
+      volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], d_fft_size);
       // volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
       volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[d_offset], d_fft_size);
 

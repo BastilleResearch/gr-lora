@@ -1,11 +1,14 @@
-title: The LORA OOT Module
-brief: Short description of gr-lora
+title: LoRa OOT Module
+brief: An open source implementation of the LoRa CSS PHY
 tags: # Tags are arbitrary, but look at CGRAN what other authors are using
+  - LoRa
+  - chirp
+  - css
   - sdr
 author:
-  - Author Name <authors@email.address>
+  - Matt Knight <matt@bastille.net>
 copyright_owner:
-  - Copyright Owner 1
+  - Bastille Networks, Inc.
 license:
 #repo: # Put the URL of the repository here, or leave blank for default
 #website: <module_website> # If you have a separate project website, put it here

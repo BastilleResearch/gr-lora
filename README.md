@@ -33,7 +33,8 @@ sudo ldconfig
 ```
 
 ## Usage
-Two example flowgraphs are provided in the examples/ directory.
+Example flowgraphs are provided in the examples/ directory.  Socket PDUs are used as the primary input interface.  Socket PDUs configured as UDP Servers may be connected to via:
+```$ nc -u localhost 52001```
 
 ## Limitations and TODOs
 - Additional spreading factors and code rates: Currently only SF8 and CR 4/8 are supported.

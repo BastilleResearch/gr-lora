@@ -53,7 +53,10 @@ namespace gr {
                               bool  header)
       : gr::block("decode",
               gr::io_signature::make(0, 0, 0),
-              gr::io_signature::make(0, 0, 0))
+              gr::io_signature::make(0, 0, 0)),
+        d_sf(spreading_factor),
+        d_cr(code_rate),
+        d_header(header ? true : false)
     {
       d_in_port = pmt::mp("in");
       d_out_port = pmt::mp("out");
@@ -62,10 +65,6 @@ namespace gr {
       message_port_register_out(d_out_port);
 
       set_msg_handler(d_in_port, boost::bind(&decode_impl::decode, this, _1));
-
-      d_sf = 8;
-      d_cr = 4; 
-      d_header = (header) ? true : false;
 
       d_interleaver_size = d_sf;
 

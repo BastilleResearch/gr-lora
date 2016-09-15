@@ -38,6 +38,7 @@ namespace gr {
      private:
       pmt::pmt_t d_in_port;
 
+      float         d_bw;
       unsigned char d_sf;
       unsigned char d_cr;
       unsigned char d_interleaver_size;

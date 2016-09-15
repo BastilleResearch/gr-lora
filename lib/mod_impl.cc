@@ -47,14 +47,14 @@ namespace gr {
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
-        f_mod("mod.out", std::ios::out)
+        f_mod("mod.out", std::ios::out),
+        d_bw(bandwidth),
+        d_sf(spreading_factor),
+        d_cr(code_rate)
     {
       d_in_port = pmt::mp("in");
       message_port_register_in(d_in_port);
       set_msg_handler(d_in_port, boost::bind(&mod_impl::modulate, this, _1));
-
-      d_sf = spreading_factor;
-      d_cr = code_rate;
 
       d_fft_size = (1 << spreading_factor);
 

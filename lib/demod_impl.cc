@@ -58,17 +58,17 @@ namespace gr {
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
         f_up("up.out", std::ios::out),
-        f_down("down.out", std::ios::out)
+        f_down("down.out", std::ios::out),
+        d_bw(bandwidth),
+        d_sf(spreading_factor),
+        d_cr(code_rate),
+        d_beta(beta)
     {
       d_out_port = pmt::mp("out");
 
       message_port_register_out(d_out_port);
 
       d_state = S_RESET;
-      d_bw    = bandwidth;
-      d_sf    = spreading_factor;
-      d_cr    = code_rate;
-      d_beta  = beta;
 
       d_fft_size = (1 << spreading_factor);
       d_fft = new fft::fft_complex(d_fft_size, true, 1);
@@ -79,12 +79,6 @@ namespace gr {
 
       d_power     = .000000001;     // MAGIC
       d_threshold = 0.0005;         // MAGIC
-
-      std::cout << d_beta << std::endl;
-      for (int i = 0; i < d_window.size(); i++)
-      {
-        std::cout << d_window[i] << std::endl;
-      }
 
       float phase = -M_PI;
       double accumulator = 0;

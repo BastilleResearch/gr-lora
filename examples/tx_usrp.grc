@@ -516,7 +516,7 @@
     </param>
     <param>
       <key>header</key>
-      <value>False</value>
+      <value>True</value>
     </param>
     <param>
       <key>id</key>

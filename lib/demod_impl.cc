@@ -32,7 +32,6 @@
 #define DEBUG         DEBUG_OFF
 
 #define OVERLAP_DEFAULT 1
-// #define OVERLAP_FACTOR  8
 #define OVERLAP_FACTOR  16
 
 namespace gr {
@@ -187,8 +186,8 @@ namespace gr {
 
       // Dechirp the incoming signal
       volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], 2*d_fft_size);
-      volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
-      // volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[d_offset], d_fft_size);
+      // volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
+      volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[d_offset], d_fft_size);
 
       // Windowing
       // volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_fft_size);
@@ -318,13 +317,12 @@ namespace gr {
             }
 
             if (sfd_found) {
+              num_consumed = (ol*d_fft_size)/d_overlaps + 5*d_fft_size/4;   // Skip last quarter chirp
+              // d_preamble_idx = (d_preamble_idx + num_consumed) % d_fft_size;
+
+              d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;   // @MKNIGHT
+
               d_state = S_READ_PAYLOAD;
-              num_consumed = (ol*d_fft_size)/d_overlaps + d_fft_size;          // WORKS
-              // num_consumed = (ol*d_fft_size)/d_overlaps + 6*d_fft_size/4;   // Skip last quarter chirp
-              d_preamble_idx = (d_preamble_idx + num_consumed) % d_fft_size;
-
-              // d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;
-
               d_overlaps = OVERLAP_DEFAULT;
 
               #if DEBUG >= DEBUG_INFO

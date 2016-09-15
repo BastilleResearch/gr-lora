@@ -119,8 +119,7 @@ namespace gr {
       {
         for (int j = 0; j < d_fft_size; j++)
         {
-          // iq_out.push_back(d_upchirp[(symbols_in[i] + j) % d_fft_size]);
-          iq_out.push_back(d_upchirp[(symbols_in[i] + (d_fft_size/4)-1 + j) % d_fft_size]); // MAGIC -- adjusting for the SFD quarter chirp
+          iq_out.push_back(d_upchirp[(symbols_in[i] + (d_fft_size/4) + j) % d_fft_size]); // MAGIC -- adjusting for the SFD quarter chirp
         }
       }
 

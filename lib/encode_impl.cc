@@ -295,9 +295,6 @@ namespace gr {
 
       from_gray(symbols);
 
-      // std::cout << "Mod from_grayed: " << std::endl;
-      // print_bitwise_u16(symbols);
-
       // std::cout << "Modulated Symbols: " << std::endl;
       // print_bitwise_u16(symbols);
 

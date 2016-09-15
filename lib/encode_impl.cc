@@ -252,8 +252,6 @@ namespace gr {
       size_t pkt_len(0);
       const uint8_t* bytes_in = pmt::u8vector_elements(bytes, pkt_len);
 
-      // std::cout << "ENCODE pkt_len: " << pkt_len << std::endl;
-
       std::vector<unsigned char>  nybbles;
       std::vector<unsigned short> symbols;
       std::vector<unsigned short> codewords;

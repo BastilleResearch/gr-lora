@@ -131,9 +131,9 @@ namespace gr {
         d_squelched = (d_power > d_threshold) ? false : true;
       }
 
-#if DEBUG >= DEBUG_ULTRA
-      std::cout << "POWER " << d_power << " " << d_squelched << std::endl;
-#endif
+      #if DEBUG >= DEBUG_ULTRA
+        std::cout << "POWER " << d_power << " " << d_squelched << std::endl;
+      #endif
 
       return max_idx;
     }

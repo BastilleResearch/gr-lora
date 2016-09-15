@@ -29,7 +29,6 @@
 #define DEMOD_HISTORY_DEPTH      3
 #define REQUIRED_PREAMBLE_DEPTH  4
 #define REQUIRED_SFD_CHIRPS      2
-// #define LORA_SFD_TOLERANCE       2
 #define LORA_SFD_TOLERANCE       2
 
 namespace gr {

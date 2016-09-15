@@ -134,9 +134,7 @@ namespace gr {
       
       // Append zero-magnitude samples to kick squelch in simulation
       d_iq_out.insert(d_iq_out.end(), 4*d_fft_size+128, gr_complex(std::polar(0.0, 0.0)));
-      // d_iq_out.insert(d_iq_out.end(), 128, gr_complex(std::polar(0.0, 0.0)));
 
-      // f_mod.write((const char *)&iq_out[0], iq_out.size()*sizeof(gr_complex));
       f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
     }
 

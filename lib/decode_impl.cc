@@ -294,14 +294,7 @@ namespace gr {
 
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
 
-      // std::cout << "Received Symbols: " << std::endl;
-      // print_bitwise_u16(symbols_in);
-
       to_gray(symbols_in);
-
-      // std::cout << "Decode De-grayed: " << std::endl;
-      // print_bitwise_u16(symbols_in);
-
       whiten(symbols_in);
 
       // Remove header until whitening sequence is extended
@@ -313,18 +306,8 @@ namespace gr {
         }
       }
 
-      // std::cout << "Decode De-whitened, pre-deinterleave: " << std::endl;
-      // print_bitwise_u16(symbols_in);
-
       deinterleave(symbols_in, codewords);
-
-      // std::cout << "Decode De-interleaved: " << std::endl;
-      // print_bitwise_u8(codewords);
-
       hamming_decode(codewords, bytes);
-
-      // std::cout << "Decoded Data: " << std::endl;
-      // print_bitwise_u8(bytes);
 
       print_payload(bytes);
 

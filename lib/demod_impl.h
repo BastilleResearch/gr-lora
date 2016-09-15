@@ -28,6 +28,7 @@
 #include <complex>
 #include <fstream>
 #include <gnuradio/fft/fft.h>
+#include <gnuradio/fft/window.h>
 #include <volk/volk.h>
 #include "lora/demod.h"
 

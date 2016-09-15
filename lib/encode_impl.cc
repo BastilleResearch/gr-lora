@@ -277,30 +277,12 @@ namespace gr {
       }
 
       hamming_encode(nybbles, codewords);
-
-      // std::cout << "Mod FEC Codewords: " << std::endl;
-      // print_bitwise_u16(codewords);
-
       interleave(codewords, symbols);
-
-      // std::cout << "Mod Interleaved: " << std::endl;
-      // print_bitwise_u16(symbols);
-
       whiten(symbols);
-
-      // std::cout << "Mod Whiten, Pre-grayed: " << std::endl;
-      // print_bitwise_u16(symbols);
-
       from_gray(symbols);
-
-      // std::cout << "Modulated Symbols: " << std::endl;
-      // print_bitwise_u16(symbols);
 
       pmt::pmt_t output = pmt::init_u16vector(symbols.size(), symbols);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);
-
-      // std::cout << "ENCODE symbols_size: " << symbols.size() << std::endl;
-      // std::cout << "ENCODE msg_pair: " << output << std::endl;
 
       message_port_pub(d_out_port, msg_pair);
     }

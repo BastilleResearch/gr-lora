@@ -39,8 +39,7 @@ namespace gr {
       S_RESET,
       S_PREFILL,
       S_DETECT_PREAMBLE,
-      S_DETECT_SYNC,
-      S_TUNE_SYNC,
+      S_SFD_SYNC,
       S_READ_PAYLOAD,
       S_OUT
     };

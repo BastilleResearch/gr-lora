@@ -171,38 +171,38 @@ namespace gr {
       const gr_complex *in = (const gr_complex *)  input_items[0];
       unsigned short  *out = (unsigned short   *) output_items[0];
       unsigned short num_consumed = d_fft_size;
-
-      // gr_complex *buffer = (gr_complex *)malloc(d_fft_size*sizeof(gr_complex));
-      gr_complex *buffer = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
-
       unsigned short max_index = 0;
       bool preamble_found = false;
       bool sfd_found      = false;
+
+      // Nomenclature:
+      //  up_block   == de-chirping buffer to contain upchirp features: the preamble, sync word, and data chirps
+      //  down_block == de-chirping buffer to contain downchirp features: the SFD
+      gr_complex *buffer     = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
       gr_complex *up_block   = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
       gr_complex *down_block = (gr_complex *)volk_malloc(d_fft_size*sizeof(gr_complex), volk_get_alignment());
 
-      if (up_block == NULL || down_block == NULL)
+      if (buffer == NULL || up_block == NULL || down_block == NULL)
       {
         std::cerr << "Unable to allocate processing buffer!" << std::endl;
       }
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(  up_block, in, &d_upchirp[0], d_fft_size);
-      // volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[0], d_fft_size);
-      volk_32fc_x2_multiply_32fc(down_block, in, &d_downchirp[d_offset], d_fft_size);
+      volk_32fc_x2_multiply_32fc(  down_block, in, &d_upchirp[0], d_fft_size);
+      volk_32fc_x2_multiply_32fc(up_block, in, &d_downchirp[d_offset], d_fft_size);
 
       // Windowing
-      // volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_fft_size);
+      // volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
 
       if (d_state == S_READ_PAYLOAD)
       {
-        f_up.write  ((const char*)&up_block[0]  , d_fft_size*sizeof(gr_complex));
-        f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+        f_up.write  ((const char*)&down_block[0]  , d_fft_size*sizeof(gr_complex));
+        f_down.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
       }
 
       // Preamble and Data FFT
       memset(d_fft->get_inbuf(),              0, d_fft_size*sizeof(gr_complex));
-      memcpy(d_fft->get_inbuf(), &down_block[0], d_fft_size*sizeof(gr_complex));
+      memcpy(d_fft->get_inbuf(), &up_block[0], d_fft_size*sizeof(gr_complex));
       d_fft->execute();
 
       // Take argmax of returned FFT (similar to MFSK demod)
@@ -245,6 +245,7 @@ namespace gr {
 
 
 
+      // Looks for the same symbol appearing consecutively, signifying the LoRa preamble
       case S_DETECT_PREAMBLE:
         d_preamble_idx = d_argmax_history[0];
 
@@ -263,17 +264,19 @@ namespace gr {
 
         if (preamble_found and !d_squelched)   // TODO and squelch open
         {
-          d_state = S_DETECT_SYNC;   // TODO correct state
+          d_state = S_SFD_SYNC;   // TODO correct state
 
           #if DEBUG >= DEBUG_INFO
-            std::cout << "Next state: S_DETECT_SYNC" << std::endl;
+            std::cout << "Next state: S_SFD_SYNC" << std::endl;
           #endif
         }
         break;
 
 
 
-      case S_DETECT_SYNC:
+      // Accurately synchronize to the SFD by computing overlapping FFTs of the downchirp/SFD IQ stream
+      // Effectively increases FFT's time-based resolution, allowing for a better sync
+      case S_SFD_SYNC:
         d_overlaps = OVERLAP_FACTOR;
 
         for (int ol = 0; ol < d_overlaps; ol++)
@@ -289,15 +292,15 @@ namespace gr {
             std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
           #endif
 
-          // volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[0], d_fft_size);
-          volk_32fc_x2_multiply_32fc(  up_block, buffer, &d_upchirp[d_offset], d_fft_size);
+          // volk_32fc_x2_multiply_32fc(  down_block, buffer, &d_upchirp[0], d_fft_size);
+          volk_32fc_x2_multiply_32fc(  down_block, buffer, &d_upchirp[d_offset], d_fft_size);
 
           // std::cout << "FFT WINDOW START " << offset << std::endl;
           memset(d_fft->get_inbuf(),        0, d_fft_size*sizeof(gr_complex));
-          memcpy(d_fft->get_inbuf(), up_block, d_fft_size*sizeof(gr_complex));
+          memcpy(d_fft->get_inbuf(), down_block, d_fft_size*sizeof(gr_complex));
           d_fft->execute();
 
-          f_up.write  ((const char*)&up_block[0]  , d_fft_size*sizeof(gr_complex));
+          f_up.write  ((const char*)&down_block[0]  , d_fft_size*sizeof(gr_complex));
 
           // Take argmax of returned FFT (similar to MFSK demod)
           max_index = argmax(d_fft->get_outbuf(), false);
@@ -379,8 +382,8 @@ namespace gr {
 
       consume_each (num_consumed);
 
-      free(up_block);
       free(down_block);
+      free(up_block);
       free(buffer);
 
       return noutput_items;

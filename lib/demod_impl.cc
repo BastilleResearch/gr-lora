@@ -110,7 +110,7 @@ namespace gr {
         phase += (2*M_PI)/d_fft_size;
       }
 
-      // f_up.write((const char*)&d_downchirp[0], d_fft_size*sizeof(gr_complex));
+      // f_down.write((const char*)&d_downchirp[0], d_fft_size*sizeof(gr_complex));
       // f_up.write((const char*)&d_upchirp[0], d_fft_size*sizeof(gr_complex));
 
       set_history(DEMOD_HISTORY_DEPTH*pow(2, d_sf));  // Sync is 2.25 chirp periods long
@@ -188,20 +188,20 @@ namespace gr {
       }
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(  down_block, in, &d_upchirp[0], d_fft_size);
-      volk_32fc_x2_multiply_32fc(up_block, in, &d_downchirp[d_offset], d_fft_size);
+      volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_fft_size);
+      volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_fft_size);
 
       // Windowing
       // volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
 
       if (d_state == S_READ_PAYLOAD)
       {
-        f_up.write  ((const char*)&down_block[0]  , d_fft_size*sizeof(gr_complex));
-        f_down.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
+        f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+        f_up.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
       }
 
       // Preamble and Data FFT
-      memset(d_fft->get_inbuf(),              0, d_fft_size*sizeof(gr_complex));
+      memset(d_fft->get_inbuf(),            0, d_fft_size*sizeof(gr_complex));
       memcpy(d_fft->get_inbuf(), &up_block[0], d_fft_size*sizeof(gr_complex));
       d_fft->execute();
 
@@ -279,10 +279,12 @@ namespace gr {
       case S_SFD_SYNC:
         d_overlaps = OVERLAP_FACTOR;
 
+        // Iterate through sample buffer
         for (int ol = 0; ol < d_overlaps; ol++)
         {
           d_offset = ((ol*d_fft_size)/d_overlaps) % d_fft_size;
 
+          // Fill working buffer based on offset
           for (int j = 0; j < d_fft_size; j++)
           {
             buffer[j] = in[d_offset+j];
@@ -292,15 +294,13 @@ namespace gr {
             std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
           #endif
 
-          // volk_32fc_x2_multiply_32fc(  down_block, buffer, &d_upchirp[0], d_fft_size);
           volk_32fc_x2_multiply_32fc(  down_block, buffer, &d_upchirp[d_offset], d_fft_size);
 
-          // std::cout << "FFT WINDOW START " << offset << std::endl;
-          memset(d_fft->get_inbuf(),        0, d_fft_size*sizeof(gr_complex));
+          memset(d_fft->get_inbuf(),          0, d_fft_size*sizeof(gr_complex));
           memcpy(d_fft->get_inbuf(), down_block, d_fft_size*sizeof(gr_complex));
           d_fft->execute();
 
-          f_up.write  ((const char*)&down_block[0]  , d_fft_size*sizeof(gr_complex));
+          f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
 
           // Take argmax of returned FFT (similar to MFSK demod)
           max_index = argmax(d_fft->get_outbuf(), false);
@@ -313,6 +313,7 @@ namespace gr {
             sfd_found = true;
             d_sfd_idx = d_sfd_history[0];
 
+            // Check for discontinuities within some tolerance
             for (int i = 1; i < REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR; i++)
             {
               if (abs(short(d_sfd_idx) - short(d_sfd_history[i])) >= LORA_SFD_TOLERANCE)
@@ -321,11 +322,10 @@ namespace gr {
               }
             }
 
+            // If within tolerance, we've found the SFD and are synchronized
             if (sfd_found) {
               num_consumed = (ol*d_fft_size)/d_overlaps + 5*d_fft_size/4;   // Skip last quarter chirp
-              // d_preamble_idx = (d_preamble_idx + num_consumed) % d_fft_size;
-
-              d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;   // @MKNIGHT
+              d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;
 
               d_state = S_READ_PAYLOAD;
               d_overlaps = OVERLAP_DEFAULT;
@@ -353,12 +353,14 @@ namespace gr {
           #endif
         }
 
+        // Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
         d_symbols.push_back((d_argmax_history[0]-d_preamble_idx+d_fft_size) % d_fft_size);
 
         break;
 
 
 
+      // Emit a PDU to the decoder
       case S_OUT:
       {
         pmt::pmt_t output = pmt::init_u16vector(d_symbols.size(), d_symbols);

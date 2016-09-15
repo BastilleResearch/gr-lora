@@ -105,7 +105,7 @@ namespace gr {
     void
     encode_impl::whiten(std::vector<unsigned short> &symbols)
     {
-      for (int i = 0; i < symbols.size(); i++)
+      for (int i = 0; i < symbols.size() && i < WHITENING_SEQUENCE_LENGTH; i++)
       {
         symbols[i] = ((unsigned char)(symbols[i] & 0xFF) ^ d_whitening_sequence[i]) & 0xFF;
       }
@@ -280,6 +280,9 @@ namespace gr {
       interleave(codewords, symbols);
       whiten(symbols);
       from_gray(symbols);
+
+      // std::cout << "Modulated Symbols: " << std::endl;
+      // print_bitwise_u16(symbols);
 
       pmt::pmt_t output = pmt::init_u16vector(symbols.size(), symbols);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);

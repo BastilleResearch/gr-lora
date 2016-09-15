@@ -67,8 +67,6 @@ namespace gr {
         d_downchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
         d_upchirp.push_back(gr_complex(std::polar(1.0, accumulator)));
         phase += (2*M_PI)/d_fft_size;
-
-        // f_mod.write((const char *)&d_upchirp[i], sizeof(gr_complex));
       }
 
     }
@@ -123,7 +121,7 @@ namespace gr {
         }
       }
 
-      // Prepend zero-magnitude samples to kick squelch in simulation
+      // Prepend zero-magnitude samples
       d_iq_out.insert(d_iq_out.begin(), 4*d_fft_size, gr_complex(std::polar(0.0, 0.0)));
 
       // Append samples to IQ output buffer
@@ -135,7 +133,8 @@ namespace gr {
       // Append zero-magnitude samples to kick squelch in simulation
       d_iq_out.insert(d_iq_out.end(), 4*d_fft_size+128, gr_complex(std::polar(0.0, 0.0)));
 
-      f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
+      // Uncomment to write out modulated payload to disk
+      // f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
     }
 
     int

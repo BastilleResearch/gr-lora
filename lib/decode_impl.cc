@@ -104,7 +104,7 @@ namespace gr {
     void
     decode_impl::whiten(std::vector<unsigned short> &symbols)
     {
-      for (int i = 0; i < symbols.size(); i++)
+      for (int i = 0; i < symbols.size() && i < WHITENING_SEQUENCE_LENGTH; i++)
       {
         symbols[i] = ((unsigned char)(symbols[i] & 0xFF) ^ d_whitening_sequence[i]) & 0xFF;
       }
@@ -291,6 +291,9 @@ namespace gr {
       std::vector<unsigned char> bytes;
 
       for (int i = 0; i < pkt_len; i++) symbols_in.push_back(symbols_v[i]);
+
+      // std::cout << "Received Symbols: " << std::endl;
+      // print_bitwise_u16(symbols_in);
 
       to_gray(symbols_in);
       whiten(symbols_in);

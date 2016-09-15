@@ -97,9 +97,6 @@ namespace gr {
         phase += (2*M_PI)/d_fft_size;
       }
 
-      // f_down.write((const char*)&d_downchirp[0], d_fft_size*sizeof(gr_complex));
-      // f_up.write((const char*)&d_upchirp[0], d_fft_size*sizeof(gr_complex));
-
       set_history(DEMOD_HISTORY_DEPTH*pow(2, d_sf));  // Sync is 2.25 chirp periods long
     }
 
@@ -181,11 +178,12 @@ namespace gr {
       // Windowing
       volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
 
-      if (d_state == S_READ_PAYLOAD)
-      {
-        f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
-        f_up.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
-      }
+      // Uncomment to write de-chirped payload to disk for debugging
+      // if (d_state == S_READ_PAYLOAD)
+      // {
+      //   f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+      //   f_up.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
+      // }
 
       // Preamble and Data FFT
       memset(d_fft->get_inbuf(),            0, d_fft_size*sizeof(gr_complex));
@@ -287,7 +285,8 @@ namespace gr {
           memcpy(d_fft->get_inbuf(), down_block, d_fft_size*sizeof(gr_complex));
           d_fft->execute();
 
-          f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+          // Uncomment to write out overlapped chirps to disk for debugging
+          // f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
 
           // Take argmax of returned FFT (similar to MFSK demod)
           max_index = argmax(d_fft->get_outbuf(), false);

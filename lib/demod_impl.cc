@@ -352,7 +352,7 @@ namespace gr {
         }
 
         // Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
-        // Dividing by d_fft_size_factor reduces symbols to [0:2**sf] range
+        // Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
         d_symbols.push_back(((d_argmax_history[0]/d_fft_size_factor)-(d_preamble_idx/d_fft_size_factor)+d_num_symbols) % d_num_symbols);
 
         break;

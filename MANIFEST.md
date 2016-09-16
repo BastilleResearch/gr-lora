@@ -10,7 +10,7 @@ author:
 copyright_owner:
   - Bastille Networks, Inc.
 license:
-#repo: # Put the URL of the repository here, or leave blank for default
+#repo: http://github.com/BastilleResearch/gr-lora
 #website: <module_website> # If you have a separate project website, put it here
 #icon: <icon_url> # Put a URL to a square image here that will be used as an icon on CGRAN
 ---

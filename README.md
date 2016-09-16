@@ -15,10 +15,11 @@ Modulation and encoding stages are modeled as separate blocks to allow for modul
 The modulator and demodulator blocks do not resample or channelize the input/output IQ streams; they expect to be provided a stream that is channelized to the bandwidth of the modulation.
 
 ## Configuration
-- bandwidth: Width of the channel in Hz, typically [125000, 250000, 500000].
-- spreading\_factor: Number of bits per symbol, typically [7:12].  Only 8 is supported at this time.
-- code\_rate / # parity bits: Order of the Hamming FEC used.  The number of data bits per codeword is always 4, but the number of parity bits can range from [1:4].  Only 4/8 (4 data bits + 4 parity bits) is supported at this time.
-- header: Whether frames produced/consumed by the frame will contain the 8-symbol header.  The header is ignored at this time due to whitening limitations.
+- Spreading Factor: Number of bits per symbol, typically [7:12].  Only 8 is supported at this time.
+- Code Rate / # Parity Bits: Order of the Hamming FEC used.  The number of data bits per codeword is always 4, but the number of parity bits can range from [1:4].  Only 4/8 (4 data bits + 4 parity bits) is supported at this time.
+- Header: Whether frames produced/consumed by the frame will contain the 8-symbol header.  The header is ignored at this time due to whitening limitations.
+- FFT Window Beta: Controls the shape of the Blackman Harris windowing curve that is applied to the FFT input IQ.
+- FFT Size Factor: Multiplier applied to the width/number of bins of the FFT.  A multiplier of 1 yields 2**spreading_factor bins.  Received symbols are divided down to map within the valid range of [0:(2**sf)-1].  Initial results suggest 2 yields good performance.
 
 ## Installation
 ```

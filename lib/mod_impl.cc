@@ -44,7 +44,7 @@ namespace gr {
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
-        f_mod("mod.out", std::ios::out),
+        // f_mod("mod.out", std::ios::out),
         d_sf(spreading_factor),
         d_cr(code_rate)
     {
@@ -52,7 +52,7 @@ namespace gr {
       message_port_register_in(d_in_port);
       set_msg_handler(d_in_port, boost::bind(&mod_impl::modulate, this, _1));
 
-      d_fft_size = (1 << spreading_factor);
+      d_fft_size = (1 << d_sf);
 
       float phase = -M_PI;
       double accumulator = 0;

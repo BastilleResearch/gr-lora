@@ -56,8 +56,8 @@ namespace gr {
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
-        f_up("up.out", std::ios::out),
-        f_down("down.out", std::ios::out),
+        // f_up("up.out", std::ios::out),
+        // f_down("down.out", std::ios::out),
         d_sf(spreading_factor),
         d_cr(code_rate),
         d_beta(beta),
@@ -68,17 +68,11 @@ namespace gr {
 
       d_state = S_RESET;
 
-      d_num_symbols = (1 << spreading_factor);
+      d_num_symbols = (1 << d_sf);
       d_fft_size = d_fft_size_factor*d_num_symbols;
       d_fft = new fft::fft_complex(d_fft_size, true, 1);
       d_overlaps = OVERLAP_DEFAULT;
       d_offset = 0;
-
-      // std::cout << "Initializing LoRa decoder with parameters:" << std::endl;
-      // std::cout << "  spreading_factor: " << d_sf << std::endl;
-      // std::cout << "  code_rate:        " << d_cr << std::endl;
-      // std::cout << "  fft_size:         " << d_fft_size << std::endl;
-      // std::cout << "  window beta:      " << d_beta << std::endl;
 
       d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_num_symbols, d_beta);
 

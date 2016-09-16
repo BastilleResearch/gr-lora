@@ -39,7 +39,6 @@ namespace gr {
      private:
       pmt::pmt_t d_in_port;
 
-      float         d_bw;
       unsigned char d_sf;
       unsigned char d_cr;
       unsigned char d_interleaver_size;
@@ -54,8 +53,7 @@ namespace gr {
       std::ofstream f_mod;
 
      public:
-      mod_impl( float bandwidth,
-                short spreading_factor,
+      mod_impl( short spreading_factor,
                 short code_rate);
       ~mod_impl();
 

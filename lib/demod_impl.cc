@@ -37,21 +37,19 @@ namespace gr {
   namespace lora {
 
     demod::sptr
-    demod::make(  float bandwidth,
-                  unsigned short spreading_factor,
+    demod::make(  unsigned short spreading_factor,
                   unsigned short code_rate,
                   float beta,
                   unsigned short fft_factor)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(bandwidth, spreading_factor, code_rate, beta, fft_factor));
+        (new demod_impl(spreading_factor, code_rate, beta, fft_factor));
     }
 
     /*
      * The private constructor
      */
-    demod_impl::demod_impl( float bandwidth,
-                            unsigned short spreading_factor,
+    demod_impl::demod_impl( unsigned short spreading_factor,
                             unsigned short code_rate,
                             float beta,
                             unsigned short fft_factor)
@@ -60,7 +58,6 @@ namespace gr {
               gr::io_signature::make(0, 0, 0)),
         f_up("up.out", std::ios::out),
         f_down("down.out", std::ios::out),
-        d_bw(bandwidth),
         d_sf(spreading_factor),
         d_cr(code_rate),
         d_beta(beta),

@@ -538,10 +538,6 @@
   <block>
     <key>lora_demod</key>
     <param>
-      <key>bandwidth</key>
-      <value>bw</value>
-    </param>
-    <param>
       <key>alias</key>
       <value></value>
     </param>
@@ -571,7 +567,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(464, 451)</value>
+      <value>(464, 459)</value>
     </param>
     <param>
       <key>_rotation</key>

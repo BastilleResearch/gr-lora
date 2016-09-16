@@ -4,14 +4,8 @@
   <key>lora_demod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.demod($bandwidth, $spreading_factor, $code_rate, $beta, $fft_factor)</make>
+  <make>lora.demod($spreading_factor, $code_rate, $beta, $fft_factor)</make>
 
-  <param>
-    <name>Bandwidth</name>
-    <key>bandwidth</key>
-    <value>125000</value>
-    <type>float</type>
-  </param>
   <param>
     <name>Spreading Factor</name>
     <key>spreading_factor</key>

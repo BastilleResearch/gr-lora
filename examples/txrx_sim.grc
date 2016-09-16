@@ -417,10 +417,6 @@
   <block>
     <key>lora_demod</key>
     <param>
-      <key>bandwidth</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
       <key>alias</key>
       <value></value>
     </param>
@@ -450,7 +446,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(448, 355)</value>
+      <value>(448, 363)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -527,10 +523,6 @@
   <block>
     <key>lora_mod</key>
     <param>
-      <key>bandwidth</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
       <key>alias</key>
       <value></value>
     </param>
@@ -552,7 +544,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(688, 107)</value>
+      <value>(688, 115)</value>
     </param>
     <param>
       <key>_rotation</key>

@@ -29,25 +29,22 @@ namespace gr {
   namespace lora {
 
     mod::sptr
-    mod::make(  float bandwidth,
-                short spreading_factor,
+    mod::make(  short spreading_factor,
                 short code_rate)
     {
       return gnuradio::get_initial_sptr
-        (new mod_impl(bandwidth, spreading_factor, code_rate));
+        (new mod_impl(spreading_factor, code_rate));
     }
 
     /*
      * The private constructor
      */
-    mod_impl::mod_impl( float bandwidth,
-                        short spreading_factor,
+    mod_impl::mod_impl( short spreading_factor,
                         short code_rate)
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
         f_mod("mod.out", std::ios::out),
-        d_bw(bandwidth),
         d_sf(spreading_factor),
         d_cr(code_rate)
     {

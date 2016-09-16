@@ -41,7 +41,6 @@ namespace gr {
       pmt::pmt_t d_out_port;
 
       demod_state_t   d_state;
-      float           d_bw;
       unsigned short  d_sf;
       unsigned short  d_cr;
 
@@ -64,21 +63,15 @@ namespace gr {
       std::vector<float> d_window;
       float              d_beta;
 
-      std::vector<gr_complex> d_dup;
-      std::vector<gr_complex> d_ddown;
-
       std::vector<gr_complex> d_upchirp;
       std::vector<gr_complex> d_downchirp;
-
-      std::vector<gr_complex> d_dechirped;
 
       std::vector<unsigned short> d_symbols;
 
       std::ofstream f_up, f_down;
 
      public:
-      demod_impl( float bandwidth,
-                  unsigned short spreading_factor,
+      demod_impl( unsigned short spreading_factor,
                   unsigned short code_rate,
                   float beta,
                   unsigned short fft_factor);

@@ -23,13 +23,14 @@
 #define INCLUDED_LORA_DEMOD_H
 
 #include <lora/api.h>
-//#include <volk/volk.h>
 #include <gnuradio/block.h>
 
-#define DEMOD_HISTORY_DEPTH      3
-#define REQUIRED_PREAMBLE_DEPTH  4
-#define REQUIRED_SFD_CHIRPS      2
-#define LORA_SFD_TOLERANCE       2
+#define DEMOD_SYNC_RECOVERY_COUNT  32    // MAGIC, set to the whitening sequence length initially
+#define DEMOD_HISTORY_DEPTH        3
+#define REQUIRED_PREAMBLE_CHIRPS   6
+#define REQUIRED_SFD_CHIRPS        2
+#define LORA_SFD_TOLERANCE         1
+#define LORA_PREAMBLE_TOLERANCE    1
 
 namespace gr {
   namespace lora {
@@ -64,7 +65,8 @@ namespace gr {
       static sptr make( float bandwidth,
                         unsigned short spreading_factor,
                         unsigned short code_rate,
-                        float beta);
+                        float beta,
+                        unsigned short fft_factor);
     };
 
   } // namespace lora

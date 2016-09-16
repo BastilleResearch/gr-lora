@@ -179,7 +179,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(952, 321)</value>
+      <value>(952, 329)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -269,7 +269,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(952, 419)</value>
+      <value>(952, 427)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -387,7 +387,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(704, 363)</value>
+      <value>(704, 371)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -439,6 +439,10 @@
     <param>
       <key>_enabled</key>
       <value>1</value>
+    </param>
+    <param>
+      <key>fft_factor</key>
+      <value>2</value>
     </param>
     <param>
       <key>beta</key>

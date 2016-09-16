@@ -28,7 +28,6 @@
 #define DEBUG_OFF     0
 #define DEBUG_INFO    1
 #define DEBUG_VERBOSE 2
-#define DEBUG_ULTRA   3
 #define DEBUG         DEBUG_OFF
 
 #define OVERLAP_DEFAULT 1
@@ -41,10 +40,11 @@ namespace gr {
     demod::make(  float bandwidth,
                   unsigned short spreading_factor,
                   unsigned short code_rate,
-                  float beta)
+                  float beta,
+                  unsigned short fft_factor)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(bandwidth, spreading_factor, code_rate, beta));
+        (new demod_impl(bandwidth, spreading_factor, code_rate, beta, fft_factor));
     }
 
     /*
@@ -53,7 +53,8 @@ namespace gr {
     demod_impl::demod_impl( float bandwidth,
                             unsigned short spreading_factor,
                             unsigned short code_rate,
-                            float beta)
+                            float beta,
+                            unsigned short fft_factor)
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
@@ -62,20 +63,27 @@ namespace gr {
         d_bw(bandwidth),
         d_sf(spreading_factor),
         d_cr(code_rate),
-        d_beta(beta)
+        d_beta(beta),
+        d_fft_size_factor(fft_factor)
     {
       d_out_port = pmt::mp("out");
-
       message_port_register_out(d_out_port);
 
       d_state = S_RESET;
 
-      d_fft_size = (1 << spreading_factor);
+      d_num_symbols = (1 << spreading_factor);
+      d_fft_size = d_fft_size_factor*d_num_symbols;
       d_fft = new fft::fft_complex(d_fft_size, true, 1);
       d_overlaps = OVERLAP_DEFAULT;
       d_offset = 0;
 
-      d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_fft_size, d_beta);
+      // std::cout << "Initializing LoRa decoder with parameters:" << std::endl;
+      // std::cout << "  spreading_factor: " << d_sf << std::endl;
+      // std::cout << "  code_rate:        " << d_cr << std::endl;
+      // std::cout << "  fft_size:         " << d_fft_size << std::endl;
+      // std::cout << "  window beta:      " << d_beta << std::endl;
+
+      d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_num_symbols, d_beta);
 
       d_power     = .000000001;     // MAGIC
       d_threshold = 0.0005;         // MAGIC
@@ -84,11 +92,11 @@ namespace gr {
       double accumulator = 0;
 
       // Create local chirp tables.  Each table is 2 chirps long to allow memcpying from arbitrary offsets.
-      for (int i = 0; i < 2*d_fft_size; i++) {
+      for (int i = 0; i < 2*d_num_symbols; i++) {
         accumulator += phase;
         d_downchirp.push_back(gr_complex(std::conj(std::polar(1.0, accumulator))));
         d_upchirp.push_back(gr_complex(std::polar(1.0, accumulator)));
-        phase += (2*M_PI)/d_fft_size;
+        phase += (2*M_PI)/d_num_symbols;
       }
 
       set_history(DEMOD_HISTORY_DEPTH*pow(2, d_sf));  // Sync is 2.25 chirp periods long
@@ -111,7 +119,8 @@ namespace gr {
       unsigned short   max_idx = 0;
 
 
-      for (unsigned short i = 0; i < d_fft_size; i++) {
+      for (unsigned short i = 0; i < d_fft_size; i++)
+      {
         magsq = pow(real(fft_result[i]), 2) + pow(imag(fft_result[i]), 2);
         if (magsq > max_val)
         {
@@ -120,14 +129,11 @@ namespace gr {
         }
       }
 
-      if (update_squelch) {
+      if (update_squelch)
+      {
         d_power = max_val;
         d_squelched = (d_power > d_threshold) ? false : true;
       }
-
-      #if DEBUG >= DEBUG_ULTRA
-        std::cout << "POWER " << d_power << " " << d_squelched << std::endl;
-      #endif
 
       return max_idx;
     }
@@ -136,8 +142,7 @@ namespace gr {
     demod_impl::forecast (int noutput_items,
                           gr_vector_int &ninput_items_required)
     {
-      // ninput_items_required[0] = pow(2, d_sf);
-      ninput_items_required[0] = noutput_items * pow(2, d_sf);
+      ninput_items_required[0] = noutput_items * (1 << d_sf);
     }
 
     int
@@ -148,7 +153,7 @@ namespace gr {
     {
       const gr_complex *in = (const gr_complex *)  input_items[0];
       unsigned short  *out = (unsigned short   *) output_items[0];
-      unsigned short num_consumed = d_fft_size;
+      unsigned short num_consumed = d_num_symbols;
       unsigned short max_index = 0;
       bool preamble_found = false;
       bool sfd_found      = false;
@@ -166,29 +171,30 @@ namespace gr {
       }
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_fft_size);
-      volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_fft_size);
-
-      // Windowing
-      volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_fft_size);
+      volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_num_symbols);
+      volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_num_symbols);
 
       // Uncomment to write de-chirped payload to disk for debugging
       // if (d_state == S_READ_PAYLOAD)
       // {
-      //   f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
-      //   f_up.write((const char*)&up_block[0], d_fft_size*sizeof(gr_complex));
+      //  f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+      //  f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
       // }
 
+      // Windowing
+      volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_num_symbols);
+
       // Preamble and Data FFT
+      // If d_fft_size_factor is greater than 1, the rest of the sample buffer will be zeroed out and blend into the window
       memset(d_fft->get_inbuf(),            0, d_fft_size*sizeof(gr_complex));
-      memcpy(d_fft->get_inbuf(), &up_block[0], d_fft_size*sizeof(gr_complex));
+      memcpy(d_fft->get_inbuf(), &up_block[0], d_num_symbols*sizeof(gr_complex));
       d_fft->execute();
 
       // Take argmax of returned FFT (similar to MFSK demod)
       max_index = argmax(d_fft->get_outbuf(), true);
       d_argmax_history.insert(d_argmax_history.begin(), max_index);
 
-      if (d_argmax_history.size() > REQUIRED_PREAMBLE_DEPTH)
+      if (d_argmax_history.size() > REQUIRED_PREAMBLE_CHIRPS)
       {
         d_argmax_history.pop_back();
       }
@@ -212,7 +218,7 @@ namespace gr {
 
 
       case S_PREFILL:
-        if (d_argmax_history.size() >= REQUIRED_PREAMBLE_DEPTH)
+        if (d_argmax_history.size() >= REQUIRED_PREAMBLE_CHIRPS)
         {
           d_state = S_DETECT_PREAMBLE;
 
@@ -232,18 +238,20 @@ namespace gr {
           std::cout << "PREAMBLE " << d_argmax_history[0] << std::endl;
         #endif
 
-        for (int i = 1; i < REQUIRED_PREAMBLE_DEPTH; i++)
+        // Check for discontinuities that exceed some tolerance
+        preamble_found = true;
+        for (int i = 1; i < REQUIRED_PREAMBLE_CHIRPS; i++)
         {
-          preamble_found = true;
-          if (d_preamble_idx != d_argmax_history[i])
+          if (abs(int(d_preamble_idx) - int(d_argmax_history[i])) > LORA_PREAMBLE_TOLERANCE)
           {
             preamble_found = false;
           }
         }
 
-        if (preamble_found and !d_squelched)   // TODO and squelch open
+        // Advance to SFD/sync discovery if a contiguous preamble is found
+        if (preamble_found and !d_squelched)
         {
-          d_state = S_SFD_SYNC;   // TODO correct state
+          d_state = S_SFD_SYNC;
 
           #if DEBUG >= DEBUG_INFO
             std::cout << "Next state: S_SFD_SYNC" << std::endl;
@@ -258,13 +266,25 @@ namespace gr {
       case S_SFD_SYNC:
         d_overlaps = OVERLAP_FACTOR;
 
+        // Recover if the SFD is missed, or if we wind up in this state erroneously (false positive on preamble)
+        if (d_argmax_history.size() > d_overlaps*DEMOD_SYNC_RECOVERY_COUNT)
+        {
+          d_state = S_RESET;
+          d_overlaps = OVERLAP_DEFAULT;
+
+          #if DEBUG >= DEBUG_INFO
+            std::cout << "Bailing out of sync loop"   << std::endl;
+            std::cout << "Next state: S_RESET" << std::endl;
+          #endif
+        }
+
         // Iterate through sample buffer
         for (int ol = 0; ol < d_overlaps; ol++)
         {
-          d_offset = ((ol*d_fft_size)/d_overlaps) % d_fft_size;
+          d_offset = ((ol*d_num_symbols)/d_overlaps) % d_num_symbols;
 
           // Fill working buffer based on offset
-          for (int j = 0; j < d_fft_size; j++)
+          for (int j = 0; j < d_num_symbols; j++)
           {
             buffer[j] = in[d_offset+j];
           }
@@ -273,16 +293,16 @@ namespace gr {
             std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
           #endif
 
-          volk_32fc_x2_multiply_32fc(  down_block, buffer, &d_upchirp[d_offset], d_fft_size);
-
-          memset(d_fft->get_inbuf(),          0, d_fft_size*sizeof(gr_complex));
-          memcpy(d_fft->get_inbuf(), down_block, d_fft_size*sizeof(gr_complex));
-          d_fft->execute();
+          volk_32fc_x2_multiply_32fc(down_block, buffer, &d_upchirp[d_offset], d_num_symbols);
 
           // Uncomment to write out overlapped chirps to disk for debugging
-          // f_down.write((const char*)&down_block[0], d_fft_size*sizeof(gr_complex));
+          // f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
 
-          // Take argmax of returned FFT (similar to MFSK demod)
+          memset(d_fft->get_inbuf(),          0, d_fft_size*sizeof(gr_complex));
+          memcpy(d_fft->get_inbuf(), down_block, d_num_symbols*sizeof(gr_complex));
+          d_fft->execute();
+
+          // Take argmax of downchirp FFT
           max_index = argmax(d_fft->get_outbuf(), false);
           d_sfd_history.insert(d_sfd_history.begin(), max_index);
 
@@ -293,19 +313,20 @@ namespace gr {
             sfd_found = true;
             d_sfd_idx = d_sfd_history[0];
 
-            // Check for discontinuities within some tolerance
+            // Check for discontinuities that exceed some preset tolerance
             for (int i = 1; i < REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR; i++)
             {
-              if (abs(short(d_sfd_idx) - short(d_sfd_history[i])) >= LORA_SFD_TOLERANCE)
+              if (abs(int(d_sfd_idx) - int(d_sfd_history[i])) > d_fft_size_factor*LORA_SFD_TOLERANCE)
               {
                 sfd_found = false;
               }
             }
 
             // If within tolerance, we've found the SFD and are synchronized
-            if (sfd_found) {
-              num_consumed = (ol*d_fft_size)/d_overlaps + 5*d_fft_size/4;   // Skip last quarter chirp
-              d_offset = (d_offset + (d_fft_size/4)) % d_fft_size;
+            if (sfd_found)
+            {
+              num_consumed = (ol*d_num_symbols)/d_overlaps + 5*d_num_symbols/4;   // Skip last quarter chirp
+              d_offset = (d_offset + (d_num_symbols/4)) % d_num_symbols;
 
               d_state = S_READ_PAYLOAD;
               d_overlaps = OVERLAP_DEFAULT;
@@ -334,7 +355,8 @@ namespace gr {
         }
 
         // Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
-        d_symbols.push_back((d_argmax_history[0]-d_preamble_idx+d_fft_size) % d_fft_size);
+        // Dividing by d_fft_size_factor reduces symbols to [0:2**sf] range
+        d_symbols.push_back(((d_argmax_history[0]/d_fft_size_factor)-(d_preamble_idx/d_fft_size_factor)+d_num_symbols) % d_num_symbols);
 
         break;
 

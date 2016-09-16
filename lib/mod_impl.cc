@@ -23,7 +23,6 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include <volk/volk.h>
 #include "mod_impl.h"
 
 namespace gr {

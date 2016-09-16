@@ -45,6 +45,8 @@ namespace gr {
       unsigned short  d_sf;
       unsigned short  d_cr;
 
+      unsigned short  d_num_symbols;
+      unsigned short  d_fft_size_factor;
       unsigned short  d_fft_size;
       unsigned short  d_overlaps;
       unsigned short  d_offset;
@@ -78,7 +80,8 @@ namespace gr {
       demod_impl( float bandwidth,
                   unsigned short spreading_factor,
                   unsigned short code_rate,
-                  float beta);
+                  float beta,
+                  unsigned short fft_factor);
       ~demod_impl();
 
       unsigned short argmax(gr_complex *fft_result, bool update_squelch);

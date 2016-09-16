@@ -24,6 +24,7 @@
 #include <vector>
 #include <complex>
 #include <fstream>
+#include <volk/volk.h>
 #include <lora/mod.h>
 
 #define NUM_PREAMBLE_CHIRPS   8

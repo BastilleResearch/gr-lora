@@ -23,7 +23,6 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include <bitset>
 #include "decode_impl.h"
 
 #define HAMMING_T1_BITMASK 0xAA  // 0b10101010
@@ -206,11 +205,11 @@ namespace gr {
 
         // std::cout << "Interleave Debug # Corrected Set Bits: " << std::dec << num_set_bits << std::endl;
 
-        if (num_set_bits < 4)
+        if (num_set_bits < 3)
         {
           codewords[i] = 0;
         }
-        else if (num_set_bits > 4)
+        else if (num_set_bits > 5)
         {
           codewords[i] = 0xFF;
         }
@@ -309,7 +308,7 @@ namespace gr {
       deinterleave(symbols_in, codewords);
       hamming_decode(codewords, bytes);
 
-      print_payload(bytes);
+      // print_payload(bytes);
 
       pmt::pmt_t output = pmt::init_u8vector(bytes.size(), bytes);
       pmt::pmt_t msg_pair = pmt::cons(pmt::make_dict(), output);

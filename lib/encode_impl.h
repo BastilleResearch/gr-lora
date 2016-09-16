@@ -21,6 +21,8 @@
 #ifndef INCLUDED_LORA_ENCODE_IMPL_H
 #define INCLUDED_LORA_ENCODE_IMPL_H
 
+#include <volk/volk.h>
+#include <bitset>
 #include <lora/encode.h>
 
 #define WHITENING_SEQUENCE_LENGTH 219

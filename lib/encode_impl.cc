@@ -23,8 +23,6 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include <volk/volk.h>
-#include <bitset>
 #include "encode_impl.h"
 
 #define HAMMING_T1_BITMASK 0x0D  // 0b00001101

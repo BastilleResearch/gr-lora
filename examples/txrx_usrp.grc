@@ -380,132 +380,6 @@
     </param>
   </block>
   <block>
-    <key>baudline_sink</key>
-    <param>
-      <key>baseband_freq</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>channel_count</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>decim</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>extra</key>
-      <value>{'flipcomplex': None}</value>
-    </param>
-    <param>
-      <key>fft_size</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>jump_step</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(544, 523)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>baudline_sink_0</value>
-    </param>
-    <param>
-      <key>kill_on_del</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>memory</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>mode</key>
-      <value>fifo-unbuf</value>
-    </param>
-    <param>
-      <key>overlap</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>peak_hold</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>samp_rate</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
-      <key>scale</key>
-      <value>(2**15)*0 + 1</value>
-    </param>
-    <param>
-      <key>slide_size</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>complex</value>
-    </param>
-    <param>
-      <key>x_slip</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>blocks_message_debug</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(520, 17)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_message_debug_0</value>
-    </param>
-  </block>
-  <block>
     <key>blocks_message_debug</key>
     <param>
       <key>alias</key>
@@ -525,7 +399,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(888, 777)</value>
+      <value>(960, 641)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -556,7 +430,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(416, 379)</value>
+      <value>(432, 323)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -599,7 +473,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(544, 635)</value>
+      <value>(616, 499)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -642,7 +516,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(320, 123)</value>
+      <value>(336, 67)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -701,7 +575,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(888, 875)</value>
+      <value>(960, 739)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -795,7 +669,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(584, 819)</value>
+      <value>(656, 683)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -849,12 +723,16 @@
       <value>1</value>
     </param>
     <param>
+      <key>fft_factor</key>
+      <value>2</value>
+    </param>
+    <param>
       <key>beta</key>
       <value>1.0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(328, 811)</value>
+      <value>(400, 667)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -901,7 +779,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(576, 131)</value>
+      <value>(592, 75)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -956,7 +834,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(856, 131)</value>
+      <value>(872, 75)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1026,7 +904,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(616, 307)</value>
+      <value>(632, 251)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1061,7 +939,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(616, 355)</value>
+      <value>(632, 299)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1124,7 +1002,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(744, 611)</value>
+      <value>(816, 475)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1839,7 +1717,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(896, 331)</value>
+      <value>(912, 275)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2902,11 +2780,11 @@
     </param>
     <param>
       <key>dev_addr</key>
-      <value>type=b200</value>
+      <value></value>
     </param>
     <param>
       <key>dev_args</key>
-      <value>num_recv_frames=256</value>
+      <value></value>
     </param>
     <param>
       <key>_enabled</key>
@@ -2914,7 +2792,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(280, 595)</value>
+      <value>(352, 475)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3079,12 +2957,6 @@
   </connection>
   <connection>
     <source_block_id>blocks_socket_pdu_0</source_block_id>
-    <sink_block_id>blocks_message_debug_0</sink_block_id>
-    <source_key>pdus</source_key>
-    <sink_key>print_pdu</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_socket_pdu_0</source_block_id>
     <sink_block_id>lora_encode_0</sink_block_id>
     <source_key>pdus</source_key>
     <sink_key>in</sink_key>
@@ -3128,12 +3000,6 @@
   <connection>
     <source_block_id>pfb_arb_resampler_xxx_0_0</source_block_id>
     <sink_block_id>lora_demod_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>uhd_usrp_source_0</source_block_id>
-    <sink_block_id>baudline_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

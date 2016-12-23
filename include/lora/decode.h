@@ -24,6 +24,7 @@
 
 #include <lora/api.h>
 #include <gnuradio/block.h>
+#include <lora/lora.h>
 
 #define SYMBOL_TIMEOUT_COUNT   256
 

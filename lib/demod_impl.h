@@ -58,6 +58,7 @@ namespace gr {
       unsigned short  d_sfd_idx;
       std::vector<unsigned short>  d_argmax_history;
       std::vector<unsigned short>  d_sfd_history;
+      unsigned short  d_sync_recovery_counter;
 
       fft::fft_complex   *d_fft;
       std::vector<float> d_window;
@@ -68,7 +69,7 @@ namespace gr {
 
       std::vector<unsigned short> d_symbols;
 
-      std::ofstream f_up, f_down;
+      std::ofstream f_raw, f_up_windowless, f_up, f_down;
 
      public:
       demod_impl( unsigned short spreading_factor,

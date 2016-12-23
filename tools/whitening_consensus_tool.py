@@ -56,7 +56,7 @@ def main():
   output_filename = 'sf' + str(args.ppm) + '_whitening_declaration_' + args.header_mode + '.txt'
   ofile = open(output_filename, 'w')
 
-  ofile.write('const unsigned short sf' + str(args.ppm) + '_whitening_sequence_' + args.header_mode + '[' + str(shortest_len) + '] = {')
+  ofile.write('const unsigned short whitening_sequence_sf' + str(args.ppm) + '_' + args.header_mode + '[' + str(shortest_len) + '] = {')
 
   for i in range(shortest_len):
     if i != 0:

@@ -56,13 +56,20 @@ namespace gr {
       : gr::block("demod",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(0, 0, 0)),
-        // f_up("up.out", std::ios::out),
-        // f_down("down.out", std::ios::out),
+        f_raw("raw.out", std::ios::out),
+        f_up_windowless("up_windowless.out", std::ios::out),
+        f_up("up.out", std::ios::out),
+        f_down("down.out", std::ios::out),
         d_sf(spreading_factor),
         d_cr(code_rate),
         d_beta(beta),
         d_fft_size_factor(fft_factor)
     {
+      assert((d_sf > 5) && (d_sf < 13));
+      assert((d_cr > 0) && (d_cr < 5));
+      if (d_sf == 6) assert(!header);
+      assert(d_fft_size_factor > 0);
+
       d_out_port = pmt::mp("out");
       message_port_register_out(d_out_port);
 
@@ -74,10 +81,20 @@ namespace gr {
       d_overlaps = OVERLAP_DEFAULT;
       d_offset = 0;
 
-      d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_num_symbols, d_beta);
+      // d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_num_symbols, d_beta);
+      d_window = fft::window::build(fft::window::WIN_KAISER, d_num_symbols, d_beta);
+
+      // std::cout << "window" << std::endl;
+      // for (int i = 0; i < d_num_symbols; i++)
+      // {
+      //   std::cout << d_window[i] << " " << std::endl;
+      // }
+      // std::cout << std::endl;
 
       d_power     = .000000001;     // MAGIC
-      d_threshold = 0.0005;         // MAGIC
+      d_threshold = 0.005;         // MAGIC
+      // d_threshold = 0.003;         // MAGIC
+      // d_threshold = 0.12;         // MAGIC
 
       float phase = -M_PI;
       double accumulator = 0;
@@ -124,6 +141,7 @@ namespace gr {
       {
         d_power = max_val;
         d_squelched = (d_power > d_threshold) ? false : true;
+        // std::cout << d_power << std::endl;
       }
 
       return max_idx;
@@ -165,15 +183,19 @@ namespace gr {
       volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_num_symbols);
       volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_num_symbols);
 
-      // Uncomment to write de-chirped payload to disk for debugging
-      // if (d_state == S_READ_PAYLOAD)
-      // {
-      //  f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
-      //  f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
-      // }
+      f_up_windowless.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
 
       // Windowing
       volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_num_symbols);
+
+      // Uncomment to write de-chirped payload to disk for debugging
+      // if (d_state != S_READ_PAYLOAD)
+      // if (d_state != S_SFD_SYNC)
+      // {
+        f_raw.write((const char*)&in[0], d_num_symbols*sizeof(gr_complex));
+        f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+        f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
+      // }
 
       // Preamble and Data FFT
       // If d_fft_size_factor is greater than 1, the rest of the sample buffer will be zeroed out and blend into the window
@@ -197,6 +219,7 @@ namespace gr {
         d_symbols.clear();
         d_argmax_history.clear();
         d_sfd_history.clear();
+        d_sync_recovery_counter = 0;
 
         d_state = S_PREFILL;
 
@@ -258,7 +281,7 @@ namespace gr {
         d_overlaps = OVERLAP_FACTOR;
 
         // Recover if the SFD is missed, or if we wind up in this state erroneously (false positive on preamble)
-        if (d_argmax_history.size() > d_overlaps*DEMOD_SYNC_RECOVERY_COUNT)
+        if (d_sync_recovery_counter++ > DEMOD_SYNC_RECOVERY_COUNT)
         {
           d_state = S_RESET;
           d_overlaps = OVERLAP_DEFAULT;
@@ -319,17 +342,51 @@ namespace gr {
               num_consumed = (ol*d_num_symbols)/d_overlaps + 5*d_num_symbols/4;   // Skip last quarter chirp
               d_offset = (d_offset + (d_num_symbols/4)) % d_num_symbols;
 
-              d_state = S_READ_PAYLOAD;
+              d_state = S_READ_HEADER;
               d_overlaps = OVERLAP_DEFAULT;
 
               #if DEBUG >= DEBUG_INFO
-                std::cout << "Next state: S_READ_PAYLOAD" << std::endl;
+                std::cout << "Next state: S_READ_HEADER" << std::endl;
               #endif
+
+              // std::cout << "SYNC DONE " << num_consumed << std::endl;
 
               break;
             }
           }
         }
+
+        // std::cout << "SYNC     " << num_consumed << std::endl;
+
+        break;
+
+
+
+      case S_READ_HEADER:
+        if (d_squelched)
+        {
+          d_state = S_OUT;
+
+          #if DEBUG >= DEBUG_INFO
+            std::cout << "Next state: S_OUT" << std::endl;
+          #endif
+        }
+        else if (d_symbols.size() == 7)   // Symbols [0:7] contain 2**(SF-2) bits/symbol, symbols [8:] have the full 2**(SF) bits
+        {
+          d_state = S_READ_PAYLOAD;
+
+          #if DEBUG >= DEBUG_INFO
+            std::cout << "Next state: S_READ_PAYLOAD" << std::endl;
+          #endif
+        }
+
+        // std::cout << "READ_HEADER " << num_consumed << std::endl;
+
+        /* Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
+         * Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
+         * Dividing by 4 to further reduce symbol set to [0:(2**(sf-2)-1)], since header is sent at SF-2
+         */
+        d_symbols.push_back( ( ( d_num_symbols + (d_argmax_history[0]/d_fft_size_factor) - (d_preamble_idx/d_fft_size_factor)) % d_num_symbols) / 4);
 
         break;
 
@@ -345,9 +402,10 @@ namespace gr {
           #endif
         }
 
-        // Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
-        // Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
-        d_symbols.push_back(((d_argmax_history[0]/d_fft_size_factor)-(d_preamble_idx/d_fft_size_factor)+d_num_symbols) % d_num_symbols);
+        /* Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
+         * Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
+         */
+        d_symbols.push_back( ( d_num_symbols + (d_argmax_history[0]/d_fft_size_factor) - (d_preamble_idx/d_fft_size_factor)) % d_num_symbols);
 
         break;
 

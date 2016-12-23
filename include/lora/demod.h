@@ -25,12 +25,12 @@
 #include <lora/api.h>
 #include <gnuradio/block.h>
 
-#define DEMOD_SYNC_RECOVERY_COUNT  32    // MAGIC, set to the whitening sequence length initially
 #define DEMOD_HISTORY_DEPTH        3
-#define REQUIRED_PREAMBLE_CHIRPS   6
+#define REQUIRED_PREAMBLE_CHIRPS   4
 #define REQUIRED_SFD_CHIRPS        2
 #define LORA_SFD_TOLERANCE         1
 #define LORA_PREAMBLE_TOLERANCE    1
+#define DEMOD_SYNC_RECOVERY_COUNT  (8-REQUIRED_PREAMBLE_CHIRPS)+(2-REQUIRED_SFD_CHIRPS)+4
 
 namespace gr {
   namespace lora {
@@ -40,6 +40,7 @@ namespace gr {
       S_PREFILL,
       S_DETECT_PREAMBLE,
       S_SFD_SYNC,
+      S_READ_HEADER,
       S_READ_PAYLOAD,
       S_OUT
     };

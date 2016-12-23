@@ -57,6 +57,10 @@ namespace gr {
         d_cr(code_rate),
         d_header(header ? true : false)
     {
+      assert((d_sf > 5) && (d_sf < 13));
+      assert((d_cr > 0) && (d_cr < 5));
+      if (d_sf == 6) assert(!header);
+
       d_in_port = pmt::mp("in");
       d_out_port = pmt::mp("out");
 
@@ -64,6 +68,31 @@ namespace gr {
       message_port_register_out(d_out_port);
 
       set_msg_handler(d_in_port, boost::bind(&encode_impl::encode, this, _1));
+
+      switch(d_sf) {
+      case 7:
+        d_whitening_sequence = whitening_sequence_sf7_implicit;
+        break;
+      case 8:
+        d_whitening_sequence = whitening_sequence_sf8_implicit;
+        break;
+      case 9:
+        d_whitening_sequence = whitening_sequence_sf9_implicit;
+        break;
+      case 10:
+        d_whitening_sequence = whitening_sequence_sf10_implicit;
+        break;
+      case 11:
+        d_whitening_sequence = whitening_sequence_sf11_implicit;
+        break;
+      case 12:
+        d_whitening_sequence = whitening_sequence_sf12_implicit;
+        break;
+      default:
+        // TODO error condition
+        d_whitening_sequence = whitening_sequence_sf8_implicit;
+        break;
+      }
 
       d_interleaver_size = d_sf;
 
@@ -102,7 +131,7 @@ namespace gr {
     void
     encode_impl::whiten(std::vector<unsigned short> &symbols)
     {
-      for (int i = 0; i < symbols.size() && i < WHITENING_SEQUENCE_LENGTH; i++)
+      for (int i = 0; i < symbols.size() && i < whitening_sequence_length; i++)
       {
         symbols[i] = ((unsigned char)(symbols[i] & 0xFF) ^ d_whitening_sequence[i]) & 0xFF;
       }

@@ -48,6 +48,9 @@ namespace gr {
         d_sf(spreading_factor),
         d_cr(code_rate)
     {
+      assert((d_sf > 5) && (d_sf < 13));
+      assert((d_cr > 0) && (d_cr < 5));
+
       d_in_port = pmt::mp("in");
       message_port_register_in(d_in_port);
       set_msg_handler(d_in_port, boost::bind(&mod_impl::modulate, this, _1));

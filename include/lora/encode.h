@@ -24,6 +24,7 @@
 
 #include <lora/api.h>
 #include <gnuradio/block.h>
+#include <lora/lora.h>
 
 namespace gr {
   namespace lora {

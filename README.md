@@ -7,12 +7,12 @@ LoRa is a PHY layer LPWAN technology that is developed and maintained by Semtech
 
 LoRa uses a unique CSS modulation that modulates data onto chirps.  For resiliency it uses a multi-stage encoding pipeline that includes Hamming FEC, interleaving, data whitening, and symbol gray encoding.
 
-Since LoRa is closed-source, developers and security researchers have been limited to interacting with it via Layer 2+ protocols and APIs exposed through integrated circuits.  However, the security of the PHY layer cannot be taken for granted -- numerous powerful 802.15.4 attacks exploit its PHY layer to inject and mask malicious traffic in ways that are invisible to higher layers.  Our hope is that this module will empower developers and researchers alike to explore this nascent protocol and make it more secure.
+Since LoRa is closed-source, developers and security researchers have been limited to interacting with it via Layer 2+ protocols and APIs exposed through integrated circuits.  However, the security of the PHY layer cannot be taken for granted: numerous powerful 802.15.4 attacks exploit its PHY layer to inject and mask malicious traffic in ways that are invisible to higher layers.  Our hope is that this module will empower developers and researchers alike to explore this nascent protocol and make it more secure.
 
 ## Design
-Modulation and encoding stages are modeled as separate blocks to allow for modularity.  The asynchronous PDU interface is used to pass messages to/from the encoder/decoder and between encoding and modulating stages.  A good way to interface with the blocks is to use a Socket PDU block configured as a UDP Server, which can be written to like any other socket ```nc -u [IP] [PORT]```.
+Modulation and encoding stages are modeled as separate blocks to allow for modularity.  The asynchronous PDU interface is used to pass messages to/from the encoder/decoder and between encoding and modulating stages.  A good way to interface with the blocks is to use a Socket PDU block configured as a UDP Server, which can be written to like any other socket via ```nc -u [IP] [PORT]```.
 
-The modulator and demodulator blocks do not resample or channelize the input/output IQ streams; they expect to be provided a stream that is channelized to the bandwidth of the modulation.
+The modulator and demodulator blocks do not resample or channelize input/output IQ streams; they expect to be provided a stream that is channelized to the bandwidth of the modulation.
 
 ## Configuration
 - Spreading Factor: Number of bits per symbol, typically [7:12].  Only 8 is supported at this time.
@@ -45,4 +45,8 @@ Example flowgraphs are provided in the examples/ directory.  Socket PDUs are use
 - Additional demodulation strategies: iterating on existing strategy (oversampling, using oversized FFTs, etc.) and trying other methods for detection and sync.
 - Clock recovery (if necessary): Currently no clock recovery is performed beyond the initial synchonization.  Clock recovery may be desirable if clock drift presents itself as an issue, such as when sending long messages or using high spreading factors which have longer transmit times.
 - Implement upper layers (LoRaWAN): For further integration and experimentation.
+
+## Acknowledgements
+- Balint Seeber and the Bastille Threat Research Team
+- IQ Donors Thomas Telkamp and Chuck Swiger
 

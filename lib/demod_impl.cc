@@ -200,7 +200,7 @@ namespace gr {
       // if (d_state != S_READ_PAYLOAD)
       // if (d_state != S_SFD_SYNC)
       // {
-        f_raw.write((const char*)&in[0], d_num_symbols*sizeof(gr_complex));
+        // f_raw.write((const char*)&in[0], d_num_symbols*sizeof(gr_complex));
         if (d_state != S_SFD_SYNC) f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
         f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
       // }
@@ -318,7 +318,7 @@ namespace gr {
           // Dechirp
           volk_32fc_x2_multiply_32fc(down_block, buffer, &d_upchirp[d_offset], d_num_symbols);
           // Pre-FFT window
-          volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_num_symbols);
+          // volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_num_symbols);
 
           // Uncomment to write out overlapped chirps to disk for debugging
           f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
@@ -331,13 +331,13 @@ namespace gr {
           max_index = argmax(d_fft->get_outbuf(), false); 
           d_sfd_history.insert(d_sfd_history.begin(), max_index);
 
-          gr_complex *fft_result = d_fft->get_outbuf();
-          for (int q = 0; q < d_fft_size; q++)
-          {
-            float magsq = pow(real(fft_result[q]), 2) + pow(imag(fft_result[q]), 2);
-            std::cout << magsq << " ";
-          }
-          std::cout << std::endl;
+          // gr_complex *fft_result = d_fft->get_outbuf();
+          // for (int q = 0; q < d_fft_size; q++)
+          // {
+          //   float magsq = pow(real(fft_result[q]), 2) + pow(imag(fft_result[q]), 2);
+          //   std::cout << magsq << " ";
+          // }
+          // std::cout << std::endl;
 
           if (d_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
           {
@@ -359,6 +359,7 @@ namespace gr {
             if (sfd_found)
             {
               num_consumed = (ol*d_num_symbols)/d_overlaps + 5*d_num_symbols/4;   // Skip last quarter chirp
+              // num_consumed = (ol*d_num_symbols)/d_overlaps + 6*d_num_symbols/4;   // Skip last quarter chirp
               d_offset = (d_offset + (d_num_symbols/4)) % d_num_symbols;
 
               d_state = S_READ_HEADER;
@@ -452,6 +453,7 @@ namespace gr {
         break;
       }
 
+      f_raw.write((const char*)&in[0], num_consumed*sizeof(gr_complex));
       consume_each (num_consumed);
 
       free(down_block);

@@ -75,6 +75,7 @@ namespace gr {
       {
         case 6:
           d_whitening_sequence = whitening_sequence_sf6_implicit;
+          break;
         case 7:
           d_whitening_sequence = whitening_sequence_sf7_implicit;
           break;
@@ -562,7 +563,9 @@ namespace gr {
       std::cout << "header syms len " << header_symbols_in.size() << std::endl;
       std::cout << "payload syms len " << payload_symbols_in.size() << std::endl;
 
+      std::cout << "header dewhitened symbols" << std::endl;
       print_bitwise_u16(header_symbols_in);
+      std::cout << "payload dewhitened symbols" << std::endl;
       print_bitwise_u16(payload_symbols_in);
 
       // Decode header

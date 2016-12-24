@@ -107,7 +107,7 @@ namespace gr {
         phase += (2*M_PI)/d_num_symbols;
       }
 
-      set_history(DEMOD_HISTORY_DEPTH*pow(2, d_sf));  // Sync is 2.25 chirp periods long
+      set_history(DEMOD_HISTORY_DEPTH*d_num_symbols);  // Sync is 2.25 chirp periods long
     }
 
     /*
@@ -181,7 +181,15 @@ namespace gr {
 
       // Dechirp the incoming signal
       volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_num_symbols);
-      volk_32fc_x2_multiply_32fc(  up_block, in, &d_downchirp[d_offset], d_num_symbols);
+
+      if (d_state == S_READ_HEADER || d_state == S_READ_PAYLOAD)
+      {
+        volk_32fc_x2_multiply_32fc(up_block, in, &d_downchirp[d_offset], d_num_symbols);
+      }
+      else
+      {
+        volk_32fc_x2_multiply_32fc(up_block, in, &d_downchirp[0], d_num_symbols);
+      }
 
       f_up_windowless.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
 
@@ -193,7 +201,7 @@ namespace gr {
       // if (d_state != S_SFD_SYNC)
       // {
         f_raw.write((const char*)&in[0], d_num_symbols*sizeof(gr_complex));
-        f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+        if (d_state != S_SFD_SYNC) f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
         f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
       // }
 
@@ -307,18 +315,29 @@ namespace gr {
             std::cout << "ol: " << std::dec << ol << " d_overlaps: " << d_overlaps << std::endl;
           #endif
 
+          // Dechirp
           volk_32fc_x2_multiply_32fc(down_block, buffer, &d_upchirp[d_offset], d_num_symbols);
+          // Pre-FFT window
+          volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_num_symbols);
 
           // Uncomment to write out overlapped chirps to disk for debugging
-          // f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+          f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
 
           memset(d_fft->get_inbuf(),          0, d_fft_size*sizeof(gr_complex));
           memcpy(d_fft->get_inbuf(), down_block, d_num_symbols*sizeof(gr_complex));
           d_fft->execute();
 
           // Take argmax of downchirp FFT
-          max_index = argmax(d_fft->get_outbuf(), false);
+          max_index = argmax(d_fft->get_outbuf(), false); 
           d_sfd_history.insert(d_sfd_history.begin(), max_index);
+
+          gr_complex *fft_result = d_fft->get_outbuf();
+          for (int q = 0; q < d_fft_size; q++)
+          {
+            float magsq = pow(real(fft_result[q]), 2) + pow(imag(fft_result[q]), 2);
+            std::cout << magsq << " ";
+          }
+          std::cout << std::endl;
 
           if (d_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
           {

@@ -216,7 +216,8 @@ namespace gr {
           switch (rdd)
           {
             case 4:
-              block[cw_idx] = (block[cw_idx] & 128) | (block[cw_idx] & 64) | (block[cw_idx] & 32) >> 1 | (block[cw_idx] & 16) >> 4 | (block[cw_idx] & 8) << 2 | (block[cw_idx] & 4) << 1 | (block[cw_idx] & 2) << 1 | (block[cw_idx] & 1) << 1;
+              // block[cw_idx] = (block[cw_idx] & 128) | (block[cw_idx] & 64) | (block[cw_idx] & 32) >> 1 | (block[cw_idx] & 16) >> 4 | (block[cw_idx] & 8) << 2 | (block[cw_idx] & 4) << 1 | (block[cw_idx] & 2) << 1 | (block[cw_idx] & 1) << 1;
+              block[cw_idx] = (block[cw_idx] & 128) | (block[cw_idx] & 64) | (block[cw_idx] & 32) >> 5 | (block[cw_idx] & 16) | (block[cw_idx] & 8) << 2 | (block[cw_idx] & 4) << 1 | (block[cw_idx] & 2) << 1 | (block[cw_idx] & 1) << 1;
               break;
 
             case 3:
@@ -234,138 +235,8 @@ namespace gr {
           codewords.push_back(block[cw_idx]);
         }
       }
-
-#if 0
-      int inner = 0;
-      int outer = 0;
-      unsigned char block[INTERLEAVER_BLOCK_SIZE] = {0};
-      unsigned char word = 0;
-
-      for (int block_idx = 0; block_idx < symbols.size()/(4+rdd); block_idx++)
-      {
-        memset(block, 0, INTERLEAVER_BLOCK_SIZE*sizeof(unsigned char));
-        int block_offset = block_idx*(4+rdd);
-
-        for (int k = 0; k < (4+rdd); k++)
-        {
-          for (int m = 0; m < ppm; m++)
-          {
-            const int i = (m + k) % ppm;
-            unsigned char bit = (symbols[block_offset + k] >> m) & 0x1;
-
-            if      (m == ppm-1) block[(i - 1 + ppm) % ppm] |= (bit << k);
-            else if (m == ppm-2) block[(i + 1 + ppm) % ppm] |= (bit << k);
-            else                 block[i]                   |= (bit << k);
-          }
-        }
-
-        for (int reorder = 0; reorder < INTERLEAVER_BLOCK_SIZE; reorder++)    // Rather than PPM to account for non-sequential codeword order
-        {
-          if (rdd == 4)
-          {
-            block[reorder] = ((block[reorder] & 128)) | ((block[reorder] & 64)) | ((block[reorder] & 32) >> 5) | ((block[reorder] & 16)) | ((block[reorder] & 8) << 2) | ((block[reorder] & 4) << 1) | ((block[reorder] & 2) << 1) | ((block[reorder] & 1) << 1);
-          }
-          // else if (rdd == 3)
-          // {
-          //   block[reorder] = (block[reorder] & 64) | (block[reorder] & 32) | ((block[reorder] & 16) >> 1) | ((block[reorder] & 8) << 1) | (block[reorder] & 4) | (block[reorder] & 2) | (block[reorder] & 1);
-          // }
-        }
-
-        // std::cout << "INTERLEAVER BLOCK FOLLOWS" << std::endl;
-        // for (int i = 0; i < INTERLEAVER_BLOCK_SIZE; i++)
-        // {
-        //   std::cout << std::bitset<8>(block[i]) << std::endl;
-        // }
-        // std::cout << "INTERLEAVER BLOCK END" << std::endl;
-
-        // codewords.push_back(block[1]);
-        // codewords.push_back(block[0]);
-        // codewords.push_back(block[3]);
-        // codewords.push_back(block[2]);
-        // if (ppm == 5)
-        // {
-        //   codewords.push_back(block[4]);
-        // }
-        // else if (ppm == 6)
-        // {
-        //   codewords.push_back(block[5]);
-        //   codewords.push_back(block[4]);
-        // }
-        // else if (ppm == 7)
-        // {
-        //   codewords.push_back(block[5]);
-        //   codewords.push_back(block[4]);
-        //   codewords.push_back(block[6]);
-        // }
-        // else if (ppm == 8)
-        // {
-        //   codewords.push_back(block[5]);
-        //   codewords.push_back(block[4]);
-        //   codewords.push_back(block[7]);
-        //   codewords.push_back(block[6]);
-        // }
-        // else if (ppm == 9)
-        // {
-        //   codewords.push_back(block[5]);
-        //   codewords.push_back(block[4]);
-        //   codewords.push_back(block[7]);
-        //   codewords.push_back(block[6]);
-        //   codewords.push_back(block[8]);
-        // }
-        // else if (ppm == 10)
-        // {
-        //   codewords.push_back(block[5]);
-        //   codewords.push_back(block[4]);
-        //   codewords.push_back(block[7]);
-        //   codewords.push_back(block[6]);
-        //   codewords.push_back(block[9]);
-        //   codewords.push_back(block[8]);
-        // }
-
-/*
-        for (int out_idx = 0; out_idx < ppm/2; out_idx++)
-        {
-          if (2*out_idx == ppm-1)
-          {
-            codewords.push_back(block[2*out_idx+1]);
-          }
-          else
-          {
-            codewords.push_back(block[2*out_idx+1]);
-            codewords.push_back(block[2*out_idx]);
-          }
-        }
-*/
-
-        for (int out_idx = 0; out_idx < ppm; out_idx++)
-        {
-          codewords.push_back(block[out_idx]);
-        }
-      }
-#endif
     }
 
-/*
-    //   for (int x = 0; x < symbols.size()/(4+rdd); x++)
-    //   {
-    //     memset(block, 0, ppm*sizeof(unsigned char));
-    //     const int symOff = x*(4+rdd);
-    //     for (int k = 0; k < (4+rdd); k++)
-    //     {
-    //       for (int m = 0; m < ppm; m++)
-    //       {
-    //         const int i = (m + k) % ppm;
-    //         unsigned char bit = (symbols[symOff + k] >> m) & 0x1;
-    //
-    //         if      (m == ppm-1) block[(i - 1 + ppm) % ppm] |= (bit << k);
-    //         else if (m == ppm-2) block[(i + 1 + ppm) % ppm] |= (bit << k);
-    //         else                 block[i]                   |= (bit << k);
-    //       }
-    //     }
-    //     for (int j = 0; j < ppm; j++) codewords.push_back(block[j]);
-    //   }
-    // }
-  */
 
 
     void
@@ -381,13 +252,6 @@ namespace gr {
 
       for (int i = 0; i < codewords.size(); i++)
       {
-        // Reorder into hamming format. Hamming parity bits p3 and p4 are flipped OTA, so format to be corrected is p1,p2,p4,p3,d1,d2,d3,d4
-        // Final bit order is p1,p2,d1,p3,d2,d3,d4,p4
-        // codewords[i] =  ((codewords[i] & 128))    | ((codewords[i] & 64))     | ((codewords[i] & 32) >> 5) | ((codewords[i] & 16)) | 
-        //                 ((codewords[i] & 8) << 2) | ((codewords[i] & 4) << 1) | ((codewords[i] & 2) << 1)  | ((codewords[i] & 1) << 1);
-
-        // std::cout << "Interleave Debug Raw Codeword " << std::bitset<8>(codewords[i]) << std::endl;
-
         switch (rdd) {
           case 4:
             t8 = parity(codewords[i], mask = (unsigned char)HAMMING_T8_BITMASK);
@@ -399,11 +263,6 @@ namespace gr {
             t1 = parity(codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK >> (4 - rdd));
             break;
         }
-        // t1 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK >> (4 - rdd));
-        // t2 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T2_BITMASK >> (4 - rdd));
-        // t4 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T4_BITMASK >> (4 - rdd));
-        // if (rdd >= 4)
-        //   t8 = parity((unsigned char)codewords[i], mask = (unsigned char)HAMMING_T8_BITMASK);
 
         error_pos = -1;
         if (t1 != 0) error_pos += 1;
@@ -417,7 +276,16 @@ namespace gr {
         // Hamming(4+rdd,4) is only corrective if rdd >= 3
         if (rdd > 2)
         {
-          if (error_pos >= 0 && num_set_flags < 3)
+          num_set_bits = 0;
+          for (int bit_idx = 0; bit_idx < 8; bit_idx++)
+          {
+            if (codewords[i] & (0x01 << bit_idx))
+            {
+              num_set_bits++;
+            }
+          }
+
+          if (error_pos >= 0 && num_set_flags < 3 && num_set_bits < 6 && num_set_bits > 2)
           {
             codewords[i] ^= (0x80 >> (4-rdd)) >> error_pos;
           } 

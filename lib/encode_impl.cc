@@ -38,10 +38,11 @@ namespace gr {
     encode::sptr
     encode::make( short spreading_factor,
                   short code_rate,
+                  bool  low_data_rate,
                   bool  header)
     {
       return gnuradio::get_initial_sptr
-        (new encode_impl(spreading_factor, code_rate, header));
+        (new encode_impl(spreading_factor, code_rate, low_data_rate, header));
     }
 
     /*
@@ -49,13 +50,15 @@ namespace gr {
      */
     encode_impl::encode_impl( short spreading_factor,
                               short code_rate,
+                              bool  low_data_rate,
                               bool  header)
       : gr::block("encode",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(0, 0, 0)),
         d_sf(spreading_factor),
         d_cr(code_rate),
-        d_header(header ? true : false)
+        d_ldr(low_data_rate),
+        d_header(header)
     {
       assert((d_sf > 5) && (d_sf < 13));
       assert((d_cr > 0) && (d_cr < 5));
@@ -70,28 +73,30 @@ namespace gr {
       set_msg_handler(d_in_port, boost::bind(&encode_impl::encode, this, _1));
 
       switch(d_sf) {
-      case 7:
-        d_whitening_sequence = whitening_sequence_sf7_implicit;
-        break;
-      case 8:
-        d_whitening_sequence = whitening_sequence_sf8_implicit;
-        break;
-      case 9:
-        d_whitening_sequence = whitening_sequence_sf9_implicit;
-        break;
-      case 10:
-        d_whitening_sequence = whitening_sequence_sf10_implicit;
-        break;
-      case 11:
-        d_whitening_sequence = whitening_sequence_sf11_implicit;
-        break;
-      case 12:
-        d_whitening_sequence = whitening_sequence_sf12_implicit;
-        break;
-      default:
-        // TODO error condition
-        d_whitening_sequence = whitening_sequence_sf8_implicit;
-        break;
+        case 7:
+          d_whitening_sequence = whitening_sequence_sf7_implicit;
+          break;
+        case 8:
+          if      (d_header && !d_ldr) d_whitening_sequence = whitening_sequence_sf8_explicit;      // explicit header, LDR off
+          else if (!d_header && d_ldr) d_whitening_sequence = whitening_sequence_sf8_ldr_implicit;  // implicit header, LDR on
+          else                         d_whitening_sequence = whitening_sequence_sf8_implicit;      // implicit header, LDR off
+          break;
+        case 9:
+          d_whitening_sequence = whitening_sequence_sf9_implicit;
+          break;
+        case 10:
+          d_whitening_sequence = whitening_sequence_sf10_implicit;
+          break;
+        case 11:
+          d_whitening_sequence = whitening_sequence_sf11_implicit;
+          break;
+        case 12:
+          d_whitening_sequence = whitening_sequence_sf12_implicit;
+          break;
+        default:
+          std::cerr << "Invalid spreading factor -- this state should never happen." << std::endl;
+          d_whitening_sequence = whitening_sequence_sf8_implicit;   // TODO actually handle this
+          break;
       }
 
       d_interleaver_size = d_sf;

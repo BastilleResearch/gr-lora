@@ -38,14 +38,16 @@ namespace gr {
       
       unsigned char d_sf;
       unsigned char d_cr;
-      unsigned char d_interleaver_size;
-      bool d_header;
+      bool          d_ldr;
+      bool          d_header;
 
       unsigned short d_fft_size;
+      unsigned char  d_interleaver_size;
 
      public:
       encode_impl(  short spreading_factor,
                     short code_rate,
+                    bool  low_data_rate,
                     bool  header);
       ~encode_impl();
 

@@ -25,6 +25,8 @@
 #include <gnuradio/io_signature.h>
 #include "mod_impl.h"
 
+#define DEBUG_OUTPUT 0 // Enables debug output
+
 namespace gr {
   namespace lora {
 
@@ -42,7 +44,7 @@ namespace gr {
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
-        // f_mod("mod.out", std::ios::out),
+        f_mod("mod.out", std::ios::out),
         d_sf(spreading_factor)
     {
       assert((d_sf > 5) && (d_sf < 13));
@@ -92,19 +94,19 @@ namespace gr {
       // Sync Word 0
       for (int i = 0; i < d_fft_size; i++)
       {
-        iq_out.push_back(d_upchirp[(LORA_SYNCWORD0 + i) % d_fft_size]);
+        iq_out.push_back(d_upchirp[(8*LORA_SYNCWORD0 + i) % d_fft_size]);
       }
 
       // Sync Word 1
       for (int i = 0; i < d_fft_size; i++)
       {
-        iq_out.push_back(d_upchirp[(LORA_SYNCWORD1 + i) % d_fft_size]);
+        iq_out.push_back(d_upchirp[(8*LORA_SYNCWORD1 + i) % d_fft_size]);
       }
 
       // SFD Downchirps
       for (int i = 0; i < (2*d_fft_size+d_fft_size/4); i++)
       {
-        iq_out.push_back(d_downchirp[(LORA_SYNCWORD1 + i) % d_fft_size]);   // Downchirps start where sync word ends
+        iq_out.push_back(d_downchirp[(i) % d_fft_size]);
       }
 
       // Payload
@@ -129,7 +131,9 @@ namespace gr {
       d_iq_out.insert(d_iq_out.end(), 4*d_fft_size+128, gr_complex(std::polar(0.0, 0.0)));
 
       // Uncomment to write out modulated payload to disk
-      // f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
+      #if DEBUG_OUTPUT
+        f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
+      #endif
     }
 
     int
@@ -152,4 +156,3 @@ namespace gr {
 
   } /* namespace lora */
 } /* namespace gr */
-

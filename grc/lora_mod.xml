@@ -4,18 +4,12 @@
   <key>lora_mod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.mod($spreading_factor, $code_rate)</make>
+  <make>lora.mod($spreading_factor)</make>
 
   <param>
     <name>Spreading Factor</name>
     <key>spreading_factor</key>
     <value>8</value>
-    <type>int</type>
-  </param>
-  <param>
-    <name>Code Rate / # Parity Bits</name>
-    <key>code_rate</key>
-    <value>4</value>
     <type>int</type>
   </param>
 

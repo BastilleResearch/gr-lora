@@ -40,21 +40,19 @@ namespace gr {
 
     demod::sptr
     demod::make(  unsigned short spreading_factor,
-                  unsigned short code_rate,
-                  bool low_data_rate,
+                  bool  low_data_rate,
                   float beta,
                   unsigned short fft_factor)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(spreading_factor, code_rate, low_data_rate, beta, fft_factor));
+        (new demod_impl(spreading_factor, low_data_rate, beta, fft_factor));
     }
 
     /*
      * The private constructor
      */
     demod_impl::demod_impl( unsigned short spreading_factor,
-                            unsigned short code_rate,
-                            bool low_data_rate,
+                            bool  low_data_rate,
                             float beta,
                             unsigned short fft_factor)
       : gr::block("demod",
@@ -65,13 +63,11 @@ namespace gr {
         f_up("up.out", std::ios::out),
         f_down("down.out", std::ios::out),
         d_sf(spreading_factor),
-        d_cr(code_rate),
         d_ldr(low_data_rate),
         d_beta(beta),
         d_fft_size_factor(fft_factor)
     {
       assert((d_sf > 5) && (d_sf < 13));
-      assert((d_cr > 0) && (d_cr < 5));
       if (d_sf == 6) assert(!header);
       assert(d_fft_size_factor > 0);
 

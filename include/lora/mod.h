@@ -46,8 +46,7 @@ namespace gr {
        * class. lora::mod::make is the public interface for
        * creating new instances.
        */
-      static sptr make( short spreading_factor,
-                        short code_rate);
+      static sptr make( short spreading_factor);
     };
 
   } // namespace lora

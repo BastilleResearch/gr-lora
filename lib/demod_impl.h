@@ -42,7 +42,6 @@ namespace gr {
 
       demod_state_t   d_state;
       unsigned short  d_sf;
-      unsigned short  d_cr;
       bool d_ldr;
 
       unsigned short  d_num_symbols;
@@ -74,7 +73,6 @@ namespace gr {
 
      public:
       demod_impl( unsigned short spreading_factor,
-                  unsigned short code_rate,
                   bool low_data_rate,
                   float beta,
                   unsigned short fft_factor);

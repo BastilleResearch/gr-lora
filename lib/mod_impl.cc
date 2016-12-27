@@ -29,27 +29,23 @@ namespace gr {
   namespace lora {
 
     mod::sptr
-    mod::make(  short spreading_factor,
-                short code_rate)
+    mod::make(  short spreading_factor)
     {
       return gnuradio::get_initial_sptr
-        (new mod_impl(spreading_factor, code_rate));
+        (new mod_impl(spreading_factor));
     }
 
     /*
      * The private constructor
      */
-    mod_impl::mod_impl( short spreading_factor,
-                        short code_rate)
+    mod_impl::mod_impl( short spreading_factor)
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
         // f_mod("mod.out", std::ios::out),
-        d_sf(spreading_factor),
-        d_cr(code_rate)
+        d_sf(spreading_factor)
     {
       assert((d_sf > 5) && (d_sf < 13));
-      assert((d_cr > 0) && (d_cr < 5));
 
       d_in_port = pmt::mp("in");
       message_port_register_in(d_in_port);

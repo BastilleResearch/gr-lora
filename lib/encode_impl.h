@@ -54,8 +54,8 @@ namespace gr {
       void to_gray(std::vector<unsigned short> &symbols);
       void from_gray(std::vector<unsigned short> &symbols);
       void whiten(std::vector<unsigned short> &symbols);
-      void interleave(std::vector<unsigned short> &symbols, std::vector<unsigned short> &codewords);
-      void hamming_encode(std::vector<unsigned char> &nybbles, std::vector<unsigned short> &codewords);
+      void interleave(std::vector<unsigned char> &codewords, std::vector<unsigned short> &symbols, unsigned char ppm, unsigned char rdd);
+      void hamming_encode(std::vector<unsigned char> &nybbles, std::vector<unsigned char> &codewords, unsigned char rdd);
       unsigned char parity(unsigned char c, unsigned char bitmask);
       void print_payload(std::vector<unsigned char> &payload);
 

@@ -25,7 +25,7 @@
     <type>bool</type>
   </param>
   <param>
-    <name>Header</name>
+    <name>Explicit Header</name>
     <key>header</key>
     <value>False</value>
     <type>bool</type>

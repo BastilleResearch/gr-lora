@@ -30,6 +30,8 @@
 #define DEBUG_VERBOSE 2
 #define DEBUG         DEBUG_OFF
 
+#define DUMP_IQ       0
+
 #define OVERLAP_DEFAULT 1
 #define OVERLAP_FACTOR  16
 
@@ -39,11 +41,12 @@ namespace gr {
     demod::sptr
     demod::make(  unsigned short spreading_factor,
                   unsigned short code_rate,
+                  bool low_data_rate,
                   float beta,
                   unsigned short fft_factor)
     {
       return gnuradio::get_initial_sptr
-        (new demod_impl(spreading_factor, code_rate, beta, fft_factor));
+        (new demod_impl(spreading_factor, code_rate, low_data_rate, beta, fft_factor));
     }
 
     /*
@@ -51,6 +54,7 @@ namespace gr {
      */
     demod_impl::demod_impl( unsigned short spreading_factor,
                             unsigned short code_rate,
+                            bool low_data_rate,
                             float beta,
                             unsigned short fft_factor)
       : gr::block("demod",
@@ -62,6 +66,7 @@ namespace gr {
         f_down("down.out", std::ios::out),
         d_sf(spreading_factor),
         d_cr(code_rate),
+        d_ldr(low_data_rate),
         d_beta(beta),
         d_fft_size_factor(fft_factor)
     {
@@ -81,20 +86,12 @@ namespace gr {
       d_overlaps = OVERLAP_DEFAULT;
       d_offset = 0;
 
-      // d_window = fft::window::build(fft::window::WIN_BLACKMAN_HARRIS, d_num_symbols, d_beta);
       d_window = fft::window::build(fft::window::WIN_KAISER, d_num_symbols, d_beta);
 
-      // std::cout << "window" << std::endl;
-      // for (int i = 0; i < d_num_symbols; i++)
-      // {
-      //   std::cout << d_window[i] << " " << std::endl;
-      // }
-      // std::cout << std::endl;
-
       d_power     = .000000001;     // MAGIC
-      d_threshold = 0.005;         // MAGIC
-      // d_threshold = 0.003;         // MAGIC
-      // d_threshold = 0.12;         // MAGIC
+      d_threshold = 0.005;          // MAGIC
+      // d_threshold = 0.003;          // MAGIC
+      // d_threshold = 0.12;           // MAGIC
 
       float phase = -M_PI;
       double accumulator = 0;
@@ -141,7 +138,6 @@ namespace gr {
       {
         d_power = max_val;
         d_squelched = (d_power > d_threshold) ? false : true;
-        // std::cout << d_power << std::endl;
       }
 
       return max_idx;
@@ -180,7 +176,7 @@ namespace gr {
       }
 
       // Dechirp the incoming signal
-      volk_32fc_x2_multiply_32fc(down_block, in,          &d_upchirp[0], d_num_symbols);
+      volk_32fc_x2_multiply_32fc(down_block, in, &d_upchirp[0], d_num_symbols);
 
       if (d_state == S_READ_HEADER || d_state == S_READ_PAYLOAD)
       {
@@ -191,19 +187,18 @@ namespace gr {
         volk_32fc_x2_multiply_32fc(up_block, in, &d_downchirp[0], d_num_symbols);
       }
 
-      f_up_windowless.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
+      // Enable to write IQ to disk for debugging
+      #if DUMP_IQ
+        f_up_windowless.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
+      #endif
 
       // Windowing
       volk_32fc_32f_multiply_32fc(up_block, up_block, &d_window[0], d_num_symbols);
 
-      // Uncomment to write de-chirped payload to disk for debugging
-      // if (d_state != S_READ_PAYLOAD)
-      // if (d_state != S_SFD_SYNC)
-      // {
-        // f_raw.write((const char*)&in[0], d_num_symbols*sizeof(gr_complex));
+      #if DUMP_IQ
         if (d_state != S_SFD_SYNC) f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
         f_up.write((const char*)&up_block[0], d_num_symbols*sizeof(gr_complex));
-      // }
+      #endif
 
       // Preamble and Data FFT
       // If d_fft_size_factor is greater than 1, the rest of the sample buffer will be zeroed out and blend into the window
@@ -317,11 +312,11 @@ namespace gr {
 
           // Dechirp
           volk_32fc_x2_multiply_32fc(down_block, buffer, &d_upchirp[d_offset], d_num_symbols);
-          // Pre-FFT window
-          // volk_32fc_32f_multiply_32fc(down_block, down_block, &d_window[0], d_num_symbols);
 
-          // Uncomment to write out overlapped chirps to disk for debugging
-          f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+          // Enable to write out overlapped chirps to disk for debugging
+          #if DUMP_IQ
+            f_down.write((const char*)&down_block[0], d_num_symbols*sizeof(gr_complex));
+          #endif
 
           memset(d_fft->get_inbuf(),          0, d_fft_size*sizeof(gr_complex));
           memcpy(d_fft->get_inbuf(), down_block, d_num_symbols*sizeof(gr_complex));
@@ -330,14 +325,6 @@ namespace gr {
           // Take argmax of downchirp FFT
           max_index = argmax(d_fft->get_outbuf(), false); 
           d_sfd_history.insert(d_sfd_history.begin(), max_index);
-
-          // gr_complex *fft_result = d_fft->get_outbuf();
-          // for (int q = 0; q < d_fft_size; q++)
-          // {
-          //   float magsq = pow(real(fft_result[q]), 2) + pow(imag(fft_result[q]), 2);
-          //   std::cout << magsq << " ";
-          // }
-          // std::cout << std::endl;
 
           if (d_sfd_history.size() > REQUIRED_SFD_CHIRPS*OVERLAP_FACTOR)
           {
@@ -359,7 +346,6 @@ namespace gr {
             if (sfd_found)
             {
               num_consumed = (ol*d_num_symbols)/d_overlaps + 5*d_num_symbols/4;   // Skip last quarter chirp
-              // num_consumed = (ol*d_num_symbols)/d_overlaps + 6*d_num_symbols/4;   // Skip last quarter chirp
               d_offset = (d_offset + (d_num_symbols/4)) % d_num_symbols;
 
               d_state = S_READ_HEADER;
@@ -369,14 +355,10 @@ namespace gr {
                 std::cout << "Next state: S_READ_HEADER" << std::endl;
               #endif
 
-              // std::cout << "SYNC DONE " << num_consumed << std::endl;
-
               break;
             }
           }
         }
-
-        // std::cout << "SYNC     " << num_consumed << std::endl;
 
         break;
 
@@ -399,8 +381,6 @@ namespace gr {
             std::cout << "Next state: S_READ_PAYLOAD" << std::endl;
           #endif
         }
-
-        // std::cout << "READ_HEADER " << num_consumed << std::endl;
 
         /* Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
          * Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
@@ -425,7 +405,14 @@ namespace gr {
         /* Preamble + modulo operation normalizes the symbols about the preamble; preamble symbol == value 0
          * Dividing by d_fft_size_factor reduces symbols to [0:(2**sf)-1] range
          */
-        d_symbols.push_back( ( d_num_symbols + (d_argmax_history[0]/d_fft_size_factor) - (d_preamble_idx/d_fft_size_factor)) % d_num_symbols);
+        if (d_ldr)  // if low data rate optimization is on, give entire packet the header treatment of ppm == SF-2
+        {
+          d_symbols.push_back( ( ( d_num_symbols + (d_argmax_history[0]/d_fft_size_factor) - (d_preamble_idx/d_fft_size_factor)) % d_num_symbols) / 4);
+        }
+        else
+        {
+          d_symbols.push_back( ( d_num_symbols + (d_argmax_history[0]/d_fft_size_factor) - (d_preamble_idx/d_fft_size_factor)) % d_num_symbols);  
+        }
 
         break;
 
@@ -453,7 +440,10 @@ namespace gr {
         break;
       }
 
-      f_raw.write((const char*)&in[0], num_consumed*sizeof(gr_complex));
+      #if DUMP_IQ
+        f_raw.write((const char*)&in[0], num_consumed*sizeof(gr_complex));
+      #endif
+
       consume_each (num_consumed);
 
       free(down_block);

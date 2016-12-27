@@ -14,6 +14,7 @@ def main():
   parser.add_argument('--filename', type=str, help='input file containing binary CSV')
   parser.add_argument('--ppm', type=int, help='PPM/spreading factor of input/desired consensus')
   parser.add_argument('--header_mode', type=str, default='implicit', help='header_mode (explicit or implicit(default))')
+  parser.add_argument('--ldr', type=str, default='', help='low_data_rate (ldr or off(default))')
 
   args = parser.parse_args()
 
@@ -56,7 +57,7 @@ def main():
   output_filename = 'sf' + str(args.ppm) + '_whitening_declaration_' + args.header_mode + '.txt'
   ofile = open(output_filename, 'w')
 
-  ofile.write('const unsigned short whitening_sequence_sf' + str(args.ppm) + '_' + args.header_mode + '[' + str(shortest_len) + '] = {')
+  ofile.write('const unsigned short whitening_sequence_sf' + str(args.ppm) + '_' + str(args.ldr) + '_' + args.header_mode + '[' + str(shortest_len) + '] = {')
 
   for i in range(shortest_len):
     if i != 0:

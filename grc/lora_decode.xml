@@ -4,7 +4,7 @@
   <key>lora_decode</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.decode($spreading_factor, $code_rate, $header)</make>
+  <make>lora.decode($spreading_factor, $code_rate, $low_data_rate, $header)</make>
 
   <param>
     <name>Spreading Factor</name>
@@ -17,6 +17,12 @@
     <key>code_rate</key>
     <value>4</value>
     <type>int</type>
+  </param>
+  <param>
+    <name>Low Data Rate</name>
+    <key>low_data_rate</key>
+    <value>False</value>
+    <type>bool</type>
   </param>
   <param>
     <name>Header</name>

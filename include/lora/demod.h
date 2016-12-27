@@ -65,6 +65,7 @@ namespace gr {
        */
       static sptr make( unsigned short spreading_factor,
                         unsigned short code_rate,
+                        bool low_data_rate,
                         float beta,
                         unsigned short fft_factor);
     };

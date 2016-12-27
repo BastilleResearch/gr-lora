@@ -32,7 +32,7 @@
 
 #define INTERLEAVER_BLOCK_SIZE 8
 
-#define DEBUG_OUTPUT 1  // Controls debug print statements
+#define DEBUG_OUTPUT 0  // Controls debug print statements
 
 namespace gr {
   namespace lora {

@@ -25,27 +25,29 @@
 #include <gnuradio/io_signature.h>
 #include "mod_impl.h"
 
-#define DEBUG_OUTPUT 0 // Enables debug output
+#define DUMP_IQ 0 // Enables debug output
 
 namespace gr {
   namespace lora {
 
     mod::sptr
-    mod::make(  short spreading_factor)
+    mod::make(  short spreading_factor, unsigned char sync_word)
     {
       return gnuradio::get_initial_sptr
-        (new mod_impl(spreading_factor));
+        (new mod_impl(spreading_factor, sync_word));
     }
 
     /*
      * The private constructor
      */
-    mod_impl::mod_impl( short spreading_factor)
+    mod_impl::mod_impl( short spreading_factor,
+                        unsigned char sync_word)
       : gr::block("mod",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(gr_complex))),
         f_mod("mod.out", std::ios::out),
-        d_sf(spreading_factor)
+        d_sf(spreading_factor),
+        d_sync_word(sync_word)
     {
       assert((d_sf > 5) && (d_sf < 13));
 
@@ -94,13 +96,13 @@ namespace gr {
       // Sync Word 0
       for (int i = 0; i < d_fft_size; i++)
       {
-        iq_out.push_back(d_upchirp[(8*LORA_SYNCWORD0 + i) % d_fft_size]);
+        iq_out.push_back(d_upchirp[(8*((d_sync_word & 0xF0) >> 4) + i) % d_fft_size]);
       }
 
       // Sync Word 1
       for (int i = 0; i < d_fft_size; i++)
       {
-        iq_out.push_back(d_upchirp[(8*LORA_SYNCWORD1 + i) % d_fft_size]);
+        iq_out.push_back(d_upchirp[(8*(d_sync_word & 0x0F) + i) % d_fft_size]);
       }
 
       // SFD Downchirps
@@ -131,7 +133,7 @@ namespace gr {
       d_iq_out.insert(d_iq_out.end(), 4*d_fft_size+128, gr_complex(std::polar(0.0, 0.0)));
 
       // Uncomment to write out modulated payload to disk
-      #if DEBUG_OUTPUT
+      #if DUMP_IQ
         f_mod.write((const char *)&d_iq_out[0], d_iq_out.size()*sizeof(gr_complex));
       #endif
     }

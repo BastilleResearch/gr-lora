@@ -4,12 +4,18 @@
   <key>lora_mod</key>
   <category>lora</category>
   <import>import lora</import>
-  <make>lora.mod($spreading_factor)</make>
+  <make>lora.mod($spreading_factor, $sync_word)</make>
 
   <param>
     <name>Spreading Factor</name>
     <key>spreading_factor</key>
     <value>8</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Sync Word</name>
+    <key>sync_word</key>
+    <value>0x12</value>
     <type>int</type>
   </param>
 

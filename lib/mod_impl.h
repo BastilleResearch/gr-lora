@@ -40,9 +40,10 @@ namespace gr {
       pmt::pmt_t d_in_port;
 
       unsigned char d_sf;
-      unsigned char d_interleaver_size;
+      unsigned char d_sync_word;
 
       unsigned short d_fft_size;
+      unsigned char  d_interleaver_size;
 
       std::vector<gr_complex> d_upchirp;
       std::vector<gr_complex> d_downchirp;
@@ -52,7 +53,7 @@ namespace gr {
       std::ofstream f_mod;
 
      public:
-      mod_impl( short spreading_factor);
+      mod_impl( short spreading_factor, unsigned char d_sync_word);
       ~mod_impl();
 
       void modulate (pmt::pmt_t msg);

@@ -93,7 +93,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>500e3</value>
+      <value>250e3</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -129,6 +129,33 @@
     </param>
   </block>
   <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(176, 275)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>code_rate</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>4</value>
+    </param>
+  </block>
+  <block>
     <key>variable_text_box</key>
     <param>
       <key>comment</key>
@@ -140,7 +167,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>923.3e6</value>
+      <value>919.75e6</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -176,6 +203,60 @@
     </param>
   </block>
   <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(176, 403)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>header</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>False</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(176, 339)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>ldr</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>True</value>
+    </param>
+  </block>
+  <block>
     <key>variable_slider</key>
     <param>
       <key>comment</key>
@@ -187,7 +268,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>0</value>
+      <value>-250e3</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -246,7 +327,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>10</value>
+      <value>0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -317,7 +398,34 @@
     </param>
     <param>
       <key>value</key>
-      <value>500e3</value>
+      <value>1e6</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(176, 211)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>spreading_factor</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>8</value>
     </param>
   </block>
   <block>
@@ -395,7 +503,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -571,11 +679,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(960, 739)</value>
+      <value>(960, 747)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -653,7 +761,7 @@
     </param>
     <param>
       <key>code_rate</key>
-      <value>4</value>
+      <value>code_rate</value>
     </param>
     <param>
       <key>comment</key>
@@ -668,20 +776,24 @@
       <value>1</value>
     </param>
     <param>
+      <key>header</key>
+      <value>header</value>
+    </param>
+    <param>
       <key>_coordinate</key>
-      <value>(656, 683)</value>
+      <value>(656, 675)</value>
     </param>
     <param>
       <key>_rotation</key>
       <value>0</value>
     </param>
     <param>
-      <key>header</key>
-      <value>True</value>
-    </param>
-    <param>
       <key>id</key>
       <value>lora_decode_0</value>
+    </param>
+    <param>
+      <key>low_data_rate</key>
+      <value>ldr</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -693,7 +805,7 @@
     </param>
     <param>
       <key>spreading_factor</key>
-      <value>8</value>
+      <value>spreading_factor</value>
     </param>
   </block>
   <block>
@@ -701,10 +813,6 @@
     <param>
       <key>alias</key>
       <value></value>
-    </param>
-    <param>
-      <key>code_rate</key>
-      <value>4</value>
     </param>
     <param>
       <key>comment</key>
@@ -724,7 +832,7 @@
     </param>
     <param>
       <key>beta</key>
-      <value>1.0</value>
+      <value>25.0</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -739,6 +847,10 @@
       <value>lora_demod_0</value>
     </param>
     <param>
+      <key>low_data_rate</key>
+      <value>ldr</value>
+    </param>
+    <param>
       <key>maxoutbuf</key>
       <value>0</value>
     </param>
@@ -748,7 +860,7 @@
     </param>
     <param>
       <key>spreading_factor</key>
-      <value>8</value>
+      <value>spreading_factor</value>
     </param>
   </block>
   <block>
@@ -759,7 +871,7 @@
     </param>
     <param>
       <key>code_rate</key>
-      <value>4</value>
+      <value>code_rate</value>
     </param>
     <param>
       <key>comment</key>
@@ -774,20 +886,24 @@
       <value>True</value>
     </param>
     <param>
+      <key>header</key>
+      <value>header</value>
+    </param>
+    <param>
       <key>_coordinate</key>
-      <value>(592, 75)</value>
+      <value>(592, 67)</value>
     </param>
     <param>
       <key>_rotation</key>
       <value>0</value>
     </param>
     <param>
-      <key>header</key>
-      <value>True</value>
-    </param>
-    <param>
       <key>id</key>
       <value>lora_encode_0</value>
+    </param>
+    <param>
+      <key>low_data_rate</key>
+      <value>ldr</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -799,7 +915,7 @@
     </param>
     <param>
       <key>spreading_factor</key>
-      <value>8</value>
+      <value>spreading_factor</value>
     </param>
   </block>
   <block>
@@ -807,10 +923,6 @@
     <param>
       <key>alias</key>
       <value></value>
-    </param>
-    <param>
-      <key>code_rate</key>
-      <value>4</value>
     </param>
     <param>
       <key>comment</key>
@@ -846,7 +958,11 @@
     </param>
     <param>
       <key>spreading_factor</key>
-      <value>8</value>
+      <value>spreading_factor</value>
+    </param>
+    <param>
+      <key>sync_word</key>
+      <value>0x12</value>
     </param>
   </block>
   <block>
@@ -1705,7 +1821,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -2780,7 +2896,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>

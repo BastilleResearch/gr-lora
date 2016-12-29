@@ -79,34 +79,43 @@ namespace gr {
       switch(d_sf)
       {
         case 6:
-          d_whitening_sequence = whitening_sequence_sf6_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf6_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf6_implicit;        // implicit header, LDR on
           break;
         case 7:
-          // if (!d_ldr) d_whitening_sequence = whitening_sequence_sf7_ldr_implicit;
-          // else        d_whitening_sequence = whitening_sequence_sf7_implicit;
-          d_whitening_sequence = whitening_sequence_sf7_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf7_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf7_implicit;        // implicit header, LDR on
           break;
         case 8:
-          if      (d_header && !d_ldr) d_whitening_sequence = whitening_sequence_sf8_explicit;      // explicit header, LDR off
-          else if (!d_header && d_ldr) d_whitening_sequence = whitening_sequence_sf8_ldr_implicit;  // implicit header, LDR on
-          else                         d_whitening_sequence = whitening_sequence_sf8_implicit;      // implicit header, LDR off
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf8_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf8_implicit;        // implicit header, LDR on
           break;
         case 9:
-          d_whitening_sequence = whitening_sequence_sf9_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf9_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf9_implicit;        // implicit header, LDR on
           break;
         case 10:
-          d_whitening_sequence = whitening_sequence_sf10_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf10_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf10_implicit;        // implicit header, LDR on
           break;
         case 11:
-          d_whitening_sequence = whitening_sequence_sf11_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf11_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf11_implicit;        // implicit header, LDR on
           break;
         case 12:
-          d_whitening_sequence = whitening_sequence_sf12_implicit;
+          if (d_ldr) d_whitening_sequence = whitening_sequence_sf12_ldr_implicit;    // implicit header, LDR on
+          else       d_whitening_sequence = whitening_sequence_sf12_implicit;        // implicit header, LDR on
           break;
         default:
           std::cerr << "Invalid spreading factor -- this state should never occur." << std::endl;
           d_whitening_sequence = whitening_sequence_sf8_implicit;   // TODO actually handle this
           break;
+      }
+
+      if (d_header)
+      {
+        std::cout << "Warning: Explicit header mode is not yet supported." << std::endl;
+        std::cout << "         Using an implicit whitening sequence: demodulation will work correctly; decoding will not." << std::endl;
       }
 
       d_interleaver_size = d_sf;

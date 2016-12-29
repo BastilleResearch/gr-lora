@@ -27,10 +27,10 @@
 
 #define MAXIMUM_RDD 4
 
-#define HAMMING_T1_BITMASK 0xAA  // 0b10101010
-#define HAMMING_T2_BITMASK 0x66  // 0b01100110
-#define HAMMING_T4_BITMASK 0x1E  // 0b00011110
-#define HAMMING_T8_BITMASK 0xFE  // 0b11111110
+#define HAMMING_P1_BITMASK 0xAA  // 0b10101010
+#define HAMMING_P2_BITMASK 0x66  // 0b01100110
+#define HAMMING_P4_BITMASK 0x1E  // 0b00011110
+#define HAMMING_P8_BITMASK 0xFE  // 0b11111110
 
 #define INTERLEAVER_BLOCK_SIZE 12
 
@@ -104,7 +104,7 @@ namespace gr {
           d_whitening_sequence = whitening_sequence_sf12_implicit;
           break;
         default:
-          std::cerr << "Invalid spreading factor -- this state should never happen." << std::endl;
+          std::cerr << "Invalid spreading factor -- this state should never occur." << std::endl;
           d_whitening_sequence = whitening_sequence_sf8_implicit;   // TODO actually handle this
           break;
       }
@@ -272,7 +272,7 @@ namespace gr {
                                 std::vector<unsigned char> &bytes,
                                 unsigned char rdd)
     {
-      unsigned char t1, t2, t4, t8;
+      unsigned char p1, p2, p4, p8;
       unsigned char mask;
       unsigned int num_set_bits;
       unsigned int num_set_flags;
@@ -282,22 +282,22 @@ namespace gr {
       {
         switch (rdd) {
           case 4:
-            t8 = parity(codewords[i], mask = (unsigned char)HAMMING_T8_BITMASK);
+            p8 = parity(codewords[i], mask = (unsigned char)HAMMING_P8_BITMASK);
           case 3:
-            t4 = parity(codewords[i], mask = (unsigned char)HAMMING_T4_BITMASK >> (4 - rdd));
+            p4 = parity(codewords[i], mask = (unsigned char)HAMMING_P4_BITMASK >> (4 - rdd));
           case 2:
-            t2 = parity(codewords[i], mask = (unsigned char)HAMMING_T2_BITMASK >> (4 - rdd));
+            p2 = parity(codewords[i], mask = (unsigned char)HAMMING_P2_BITMASK >> (4 - rdd));
           case 1:
-            t1 = parity(codewords[i], mask = (unsigned char)HAMMING_T1_BITMASK >> (4 - rdd));
+            p1 = parity(codewords[i], mask = (unsigned char)HAMMING_P1_BITMASK >> (4 - rdd));
             break;
         }
 
         error_pos = -1;
-        if (t1 != 0) error_pos += 1;
-        if (t2 != 0) error_pos += 2;
-        if (t4 != 0) error_pos += 4;
+        if (p1 != 0) error_pos += 1;
+        if (p2 != 0) error_pos += 2;
+        if (p4 != 0) error_pos += 4;
 
-        num_set_flags = t1 + t2 + t4;
+        num_set_flags = p1 + p2 + p4;
 
         // Hamming(4+rdd,4) is only corrective if rdd >= 3
         if (rdd > 2)

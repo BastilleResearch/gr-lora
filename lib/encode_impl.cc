@@ -25,10 +25,10 @@
 #include <gnuradio/io_signature.h>
 #include "encode_impl.h"
 
-#define HAMMING_T1_BITMASK 0x0D  // 0b00001101
-#define HAMMING_T2_BITMASK 0x0B  // 0b00001011
-#define HAMMING_T4_BITMASK 0x07  // 0b00000111
-#define HAMMING_T8_BITMASK 0xFF  // 0b11111111
+#define HAMMING_P1_BITMASK 0x0D  // 0b00001101
+#define HAMMING_P2_BITMASK 0x0B  // 0b00001011
+#define HAMMING_P4_BITMASK 0x07  // 0b00000111
+#define HAMMING_P8_BITMASK 0xFF  // 0b11111111
 
 #define INTERLEAVER_BLOCK_SIZE 8
 
@@ -252,21 +252,21 @@ namespace gr {
                                 std::vector<unsigned char> &codewords,
                                 unsigned char rdd)
     {
-      unsigned char t1, t2, t4, t8;
+      unsigned char p1, p2, p4, p8;
       unsigned char mask;
 
       for (int i = 0; i < nybbles.size(); i++)
       {
-        t1 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_T1_BITMASK);
-        t2 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_T2_BITMASK);
-        t4 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_T4_BITMASK);
-        t8 = parity((unsigned char)nybbles[i] | t1 << 7 | t2 << 6 | t4 << 4, 
-                      mask = (unsigned char)HAMMING_T8_BITMASK);
+        p1 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_P1_BITMASK);
+        p2 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_P2_BITMASK);
+        p4 = parity((unsigned char)nybbles[i], mask = (unsigned char)HAMMING_P4_BITMASK);
+        p8 = parity((unsigned char)nybbles[i] | p1 << 7 | p2 << 6 | p4 << 4, 
+                      mask = (unsigned char)HAMMING_P8_BITMASK);
 
-        codewords.push_back(( (t1 << 7) |
-                              (t2 << 6) |
-                              (t8 << 5) |
-                              (t4 << 4) |
+        codewords.push_back(( (p1 << 7) |
+                              (p2 << 6) |
+                              (p8 << 5) |
+                              (p4 << 4) |
                               (nybbles[i] & 0x08) | 
                               (nybbles[i] & 0x04) |
                               (nybbles[i] & 0x02) |

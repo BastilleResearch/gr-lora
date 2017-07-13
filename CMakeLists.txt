@@ -34,6 +34,16 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "")
 #make sure our local CMake Modules path comes first
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
+if(POLICY CMP0026)
+   #allow reading location properties from build targets
+   cmake_policy(SET CMP0026 OLD)
+endif()
+
+if(POLICY CMP0045)
+   #allow get_target_property() to return -NOTFOUND
+   cmake_policy(SET CMP0045 OLD)
+endif()
+
 ########################################################################
 # Compiler specific setup
 ########################################################################

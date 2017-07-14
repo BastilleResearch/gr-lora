@@ -2,7 +2,7 @@
 <block>
   <name>LoRa Decoder</name>
   <key>lora_decode</key>
-  <category>lora</category>
+  <category>[LoRa]</category>
   <import>import lora</import>
   <make>lora.decode($spreading_factor, $code_rate, $low_data_rate, $header)</make>
 

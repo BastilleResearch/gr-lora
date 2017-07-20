@@ -18,9 +18,8 @@ copyright_owner:
 
 license: GPLv3
 
-repo: http://github.com/BastilleResearch/gr-lora
+repo: https://github.com/BastilleResearch/gr-lora
 
-website: bastille.net
+website: https://www.bastille.net
 
-#icon: <icon_url> # Put a URL to a square image here that will be used as an icon on CGRAN
 ---

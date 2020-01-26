@@ -2,7 +2,7 @@
 <block>
   <name>LoRa Modulator</name>
   <key>lora_mod</key>
-  <category>lora</category>
+  <category>[LoRa]</category>
   <import>import lora</import>
   <make>lora.mod($spreading_factor, $sync_word)</make>
 

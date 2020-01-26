@@ -2,7 +2,7 @@
 <block>
   <name>LoRa Demodulator</name>
   <key>lora_demod</key>
-  <category>lora</category>
+  <category>[LoRa]</category>
   <import>import lora</import>
   <make>lora.demod($spreading_factor, $low_data_rate, $beta, $fft_factor)</make>
 

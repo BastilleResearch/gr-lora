@@ -2,7 +2,7 @@
 <block>
   <name>LoRa Encoder</name>
   <key>lora_encode</key>
-  <category>lora</category>
+  <category>[LoRa]</category>
   <import>import lora</import>
   <make>lora.encode($spreading_factor, $code_rate, $low_data_rate, $header)</make>
 
